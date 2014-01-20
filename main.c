@@ -7,8 +7,10 @@
  */
 #include "mpi.h"
 #include "hw2harness.h"
+#include "cgsolve.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 double* load_vec( char* filename, int* k );
 void save_vec( int k, double* x );
@@ -48,6 +50,7 @@ int main( int argc, char* argv[] ) {
 	t1 = MPI_Wtime();
 	
 	// CG Solve here!
+    cgsolve(k);
 	
 	// End Timer
 	t2 = MPI_Wtime();
