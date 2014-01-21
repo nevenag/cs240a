@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 #include "cgsolve.h"
 #include "hw2harness.h"
 #include "matvec.h"
@@ -7,10 +8,11 @@
 
 #define PROPORTIONALITY_CONSTANT 5
 
-double* cgsolve(int k)
+void cgsolve(int k, double* result)
 {
     int n = pow(k, 2), i = 0;
     double x[n];
+    double r_new[n];
     for (i; i<n; i++)
     {
         x[i] = 0;
@@ -31,13 +33,16 @@ double* cgsolve(int k)
         double temp_d = ddot(matvec_result, d, n);
         double temp_r = ddot(r, r, n);
         double alpha = temp_r / temp_d;
-        
+        // step to next guess
         daxpy(alpha, d, 1, x, n, x);
-        r_new = daxpy(1, r, -alpha, matvec_result, n, r_new);
-        double beta = ddot(r_new, r_new) / ddot(r, r);
-        r = r_new;
+        daxpy(1, r, -alpha, matvec_result, n, r_new);
+        double beta = ddot(r_new, r_new, n) / ddot(r, r, n);
+	memcpy (r, r_new, n*sizeof(double));
+        //r = r_new;
         daxpy(1, r, beta, d, n, d);
     }
     
-    return x;
+    memcpy(result, x, n*sizeof(double));
+    
+    return;
 }
