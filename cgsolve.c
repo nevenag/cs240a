@@ -23,7 +23,8 @@ double* cgsolve(int k)
     while (iter_index < maxiters)
     {
         iter_index++;
-        double *matvec_result = matvec(d, k);
+        double matvec_result[n];
+        matvec(d, matvec_result, k);
         double temp_d = ddot(matvec_result, d_T);
         double temp_r = ddot(r, r_T);
         double alpha = temp_r / temp_d;
