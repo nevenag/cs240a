@@ -2,6 +2,8 @@
 #include "cgsolve.h"
 #include "hw2harness.h"
 #include "matvec.h"
+#include "daxpy.h"
+#include "ddot.h"
 
 #define PROPORTIONALITY_CONSTANT 5
 
@@ -25,15 +27,16 @@ double* cgsolve(int k)
         iter_index++;
         double matvec_result[n];
         matvec(d, matvec_result, k);
-        double temp_d = ddot(matvec_result, d_T);
-        double temp_r = ddot(r, r_T);
+	// n is the size of d and matvec_result
+        double temp_d = ddot(matvec_result, d, n);
+        double temp_r = ddot(r, r, n);
         double alpha = temp_r / temp_d;
         
-        x = daxpy(alpha, d, 1, x);
-        double *r_new = daxpy(1, r, -alpha, matvec_result);
-        double beta = ddot(r_new, r_new_T) / ddot(r, r_T);
+        daxpy(alpha, d, 1, x, n, x);
+        r_new = daxpy(1, r, -alpha, matvec_result, n, r_new);
+        double beta = ddot(r_new, r_new) / ddot(r, r);
         r = r_new;
-        d = daxpy(1, r, beta, d);
+        daxpy(1, r, beta, d, n, d);
     }
     
     return x;
