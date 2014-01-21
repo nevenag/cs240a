@@ -1,18 +1,19 @@
 #include <math.h>
 #include "cgsolve.h"
 #include "hw2harness.h"
+#include "matvec.h"
 
 #define PROPORTIONALITY_CONSTANT 5
 
 double* cgsolve(int k)
 {
     int n = pow(k, 2), i = 0;
-    double *x = double[n];
+    double x[n];
     for (i; i<n; i++)
     {
         x[i] = 0;
     }
-    double *r = double[n];
+    double r[n];
     for (i=0; i<n; i++)
     {
         r[i] = cs240_getB(i, n);
@@ -22,7 +23,7 @@ double* cgsolve(int k)
     while (iter_index < maxiters)
     {
         iter_index++;
-        double *matvec_result = matvec(d);
+        double *matvec_result = matvec(d, k);
         double temp_d = ddot(matvec_result, d_T);
         double temp_r = ddot(r, r_T);
         double alpha = temp_r / temp_d;
