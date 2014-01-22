@@ -61,6 +61,7 @@ int main( int argc, char* argv[] ) {
 	printf( "Problem size (k): %d\n",k);
 	printf( "Norm of the residual after %d iterations: %lf\n",iterations,norm);
 	printf( "Elapsed time during CGSOLVE: %lf\n", t1-t2);
+    printf( "Result of cs240_verify: %d\n" , cs240_verify(x, k, t1-t2));
 	
 	// Deallocate 
 	free(b);
