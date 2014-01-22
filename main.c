@@ -51,7 +51,7 @@ int main( int argc, char* argv[] ) {
 	
 	// CG Solve here!
     double result[n];
-    cgsolve(k, result);
+    cgsolve(k, result, &norm, &iterations);
 	
 	// End Timer
 	t2 = MPI_Wtime();
