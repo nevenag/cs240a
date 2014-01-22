@@ -10,10 +10,10 @@
 
 void cgsolve(int k, double* result)
 {
-    int n = pow(k, 2), i = 0;
+    int n = pow(k, 2), i;
     double x[n];
     double r_new[n];
-    for (i; i<n; i++)
+    for (i = 0; i<n; i++)
     {
         x[i] = 0;
     }

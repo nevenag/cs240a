@@ -3,10 +3,10 @@
 #include "ddot.h"
 
 double ddot(double* a, double* b, int n){
-  int i = 0;  
+  int i;  
   double result = 0;
   assert(n>0);  
-  for (i; i < n; i++){
+  for (i = 0; i < n; i++){
     result += a[i]*b[i];   
   }
   return result;
