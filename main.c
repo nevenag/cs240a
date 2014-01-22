@@ -23,7 +23,6 @@ int main( int argc, char* argv[] ) {
 	int iterations = 1000;
 	double norm;
 	double* b;
-	double* x;
 	double time;
 	double t1, t2;
 	
@@ -44,8 +43,7 @@ int main( int argc, char* argv[] ) {
 		exit(0);
 	}
 	writeOutX = atoi( argv[argc-1] ); // Write X to file if true, do not write if unspecified.
-
-	
+    double x[n];
 	// Start Timer
 	t1 = MPI_Wtime();
 	
