@@ -10,7 +10,7 @@ double ddot(double* a, double* b, int n){
   printf("ddot called. size n = %d\n", n);
   for (i = 0; i < n; i++){
     result += a[i]*b[i];  
-    printf("ddot a[i] = %f * b[i] = %f \n", a[i], b[i]);
+   // printf("ddot a[i] = %f * b[i] = %f \n", a[i], b[i]);
   }
   printf("ddot result: %f\n", result);
   return result;
