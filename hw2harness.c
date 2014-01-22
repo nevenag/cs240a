@@ -46,7 +46,7 @@ int cs240_verify(double* x, int k, double elapsedTime) {
 	for (i = 0; i < n; i++) {
 		// make sure that the element is actually a number
 		if (isnan(x[i])) {
-			correct = 0;
+			correct = 1;
 			break;
 		}
 		
@@ -57,8 +57,12 @@ int cs240_verify(double* x, int k, double elapsedTime) {
 		if (diff < 0)
 			diff = -diff;
 			
-		if (diff > 0.01) {
-			correct = 0;
+		if (diff > 0.5) {
+			correct = 3;
+			break;
+		}
+        if (diff > 0.01) {
+			correct = 2;
 			break;
 		}
 	}
