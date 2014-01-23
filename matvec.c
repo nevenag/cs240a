@@ -23,9 +23,9 @@ double *matvec(double *input_vector, double *output_vector, int k)
             if (leftinner >= 0)
                 entrysum -= input_vector[leftinner];
             if (rightinner < n)
-                entrysum -= input_vector[rightinner];
+                entrysum += input_vector[rightinner];
             if (rightmost < n)
-                entrysum -= input_vector[rightmost];
+                entrysum += input_vector[rightmost];
             
             output_vector[vectori] = entrysum;
         }
