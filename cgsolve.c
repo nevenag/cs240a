@@ -1,5 +1,6 @@
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "cgsolve.h"
 #include "hw2harness.h"
 #include "matvec.h"
@@ -7,34 +8,43 @@
 #include "ddot.h"
 
 #define PROPORTIONALITY_CONSTANT 5
+#define DEBUG_1
+
+void print_vector(double *vector, int size)
+{
+  int i;
+  for (i = 0; i < size; i++)
+  {
+    printf("\t%f\n", vector[i]);
+  }
+  return;
+}
 
 void cgsolve(int k, double* result, double* norm, int* num_iter)
 {
-    int n = pow(k, 2), i;
-    double r_new[n];
+    int n = k*k, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
+    double x[n], r[n], r_new[n], d[n];
     // x = zeros(n, 1)
-    double x[n];
     for (i = 0; i<n; i++)
     {
         x[i] = 0;
     }
     // r = b
-    double r[n];
     for (i=0; i<n; i++)
     {
         r[i] = cs240_getB(i, n);
     }
-    // calculate the norm of b
-    double normB = sqrt(ddot(r, r, n));
-    // static max iterations
-    int maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0;
+    // calculate the norm of b and set relres to 1.0 (relres = norm(b-Ax)/norm(b) = norm(b)/norm(b), x=zeros(n, 1))
+    double normB = sqrt(ddot(r, r, n)), relres = 1.0;
     // d = r
-    double d[n];
     memcpy(d, r, n*sizeof(double));
     // Return the number of iters to caller
     *num_iter = maxiters;
     while (iter_index < maxiters)
     {
+#ifdef DEBUG_1
+        printf("\nIteration %d\n", iter_index);
+#endif
         iter_index++;
         // A*d
         double matvec_result[n];
@@ -49,17 +59,37 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
         daxpy(alpha, d, 1, x, n, x);
         // rnew = r - alpha*A*d
         daxpy(1, r, -alpha, matvec_result, n, r_new);
+        // r_new' * r_new
+        double rtr = ddot(r_new, r_new, n);
+        relres = sqrt(rtr) / normB;
+        // r' * r
+        double rtrold = ddot(r, r, n);
         // beta = rnew'*rnew / r'*r
-        double beta = ddot(r_new, r_new, n) / ddot(r, r, n);
+        double beta = rtr / rtrold;
         // r = r_new
         memcpy (r, r_new, n*sizeof(double));
         // d = r + beta*d
         daxpy(1, r, beta, d, n, d);
+#ifdef DEBUG_1
+        printf("Ad = \n");
+        print_vector(matvec_result, n);
+        printf("alpha = %f\n", alpha);
+        printf("x = \n");
+        print_vector(x, n);
+        printf("r = \n");
+        print_vector(r, n);
+        printf("rtrold = %f\n", rtrold);
+        printf("rtr = %f\n", rtr);
+        printf("beta = %f\n", beta);
+        printf("d = \n");
+        print_vector(d, n);
+        //relres
+#endif
     }
     // calculate norm of r
-    double normR = sqrt(ddot(r, r, n));
+    // double normR = sqrt(ddot(r, r, n));
     // relative residual norm = norm(b-A*x)/norm(b)
-    *norm = normR/normB;
+    *norm = relres; //normR/normB;
     // Store x into result
     memcpy(result, x, n*sizeof(double));
     return;
