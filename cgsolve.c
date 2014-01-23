@@ -83,7 +83,7 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
         printf("beta = %f\n", beta);
         printf("d = \n");
         print_vector(d, n);
-        //relres
+        printf("relres = %f\n", relres);
 #endif
     }
     // calculate norm of r

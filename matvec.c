@@ -11,7 +11,7 @@ double *matvec(double *input_vector, double *output_vector, int k)
         {
             int vectori = rowi * k + coli;
             // Only 5 possible non-zero values, the middle one always exists
-            int entrysum = 4 * input_vector[vectori];
+            double entrysum = 4 * input_vector[vectori];
             // Now figure out which of the other 4 exist
             int leftmost = vectori-k,
             leftinner = vectori-1,
