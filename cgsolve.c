@@ -36,6 +36,8 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
     }
     // calculate the norm of b and set relres to 1.0 (relres = norm(b-Ax)/norm(b) = norm(b)/norm(b), x=zeros(n, 1))
     double normB = sqrt(ddot(r, r, n)), relres = 1.0;
+    // Initialize rtr
+    double rtr = ddot(r, r, n);
     // d = r
     memcpy(d, r, n*sizeof(double));
     while (relres > .00001 && iter_index < maxiters)
@@ -47,21 +49,18 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
         // A*d
         double matvec_result[n];
         matvec(d, matvec_result, k);
-        // d' * A*d
-        double temp_d = ddot(matvec_result, d, n);
-        // r' * r
-        double temp_r = ddot(r, r, n);
         // alpha = r'*r / d'*A*d
-        double alpha = temp_r / temp_d;
+        double alpha = rtr / ddot(matvec_result, d, n);
         // x = x + alpha*d
         daxpy(alpha, d, 1, x, n, x);
         // rnew = r - alpha*A*d
         daxpy(1, r, -alpha, matvec_result, n, r_new);
-        // r_new' * r_new
-        double rtr = ddot(r_new, r_new, n);
-        relres = sqrt(rtr) / normB;
         // r' * r
-        double rtrold = ddot(r, r, n);
+        double rtrold = rtr;
+        // r_new' * r_new
+        rtr = ddot(r_new, r_new, n);
+        // Update residual
+        relres = sqrt(rtr) / normB;
         // beta = rnew'*rnew / r'*r
         double beta = rtr / rtrold;
         // r = r_new
