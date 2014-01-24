@@ -85,10 +85,8 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
     }
     // Return the number of iters to caller
     *num_iter = iter_index;
-    // calculate norm of r
-    // double normR = sqrt(ddot(r, r, n));
     // relative residual norm = norm(b-A*x)/norm(b)
-    *norm = relres; //normR/normB;
+    *norm = relres;
     // Store x into result
     memcpy(result, x, n*sizeof(double));
     return;

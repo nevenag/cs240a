@@ -9,23 +9,18 @@ double *matvec(double *input_vector, double *output_vector, int k)
         // Loop through each column of output
         for (coli = 0; coli < k; coli++)
         {
-            int vectori = rowi * k + coli;
+            int i = rowi * k + coli;
             // Only 5 possible non-zero values, the middle one always exists
-            double entrysum = 4 * input_vector[vectori];
+            double entrysum = 4 * input_vector[i];
             // Now figure out which of the other 4 exist
-            int leftmost = vectori-k,
-            leftinner = vectori-1,
-            rightinner = vectori+1,
-            rightmost = vectori+k;
-            
-            if (leftmost >= 0)
-                entrysum -= input_vector[leftmost];
-            if (leftinner >= 0)
-                entrysum -= input_vector[leftinner];
-            if (rightinner < n)
-                entrysum -= input_vector[rightinner];
-            if (rightmost < n)
-                entrysum -= input_vector[rightmost];
+            if (rowi != 0)
+                entrysum -= input_vector[i-k];
+            if (coli != 0)
+                entrysum -= input_vector[i-1];
+            if (coli != k-1)
+                entrysum -= input_vector[i+1];
+            if (rowi != k-1)
+                entrysum -= input_vector[i+k];
             
             output_vector[vectori] = entrysum;
         }
