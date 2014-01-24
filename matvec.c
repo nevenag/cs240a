@@ -22,7 +22,7 @@ double *matvec(double *input_vector, double *output_vector, int k)
             if (rowi != k-1)
                 entrysum -= input_vector[i+k];
             
-            output_vector[vectori] = entrysum;
+            output_vector[i] = entrysum;
         }
     }
     return output_vector;
