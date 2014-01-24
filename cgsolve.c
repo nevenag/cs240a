@@ -38,9 +38,7 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
     double normB = sqrt(ddot(r, r, n)), relres = 1.0;
     // d = r
     memcpy(d, r, n*sizeof(double));
-    // Return the number of iters to caller
-    *num_iter = maxiters;
-    while (iter_index < maxiters)
+    while (relres > .00001 && iter_index < maxiters)
     {
 #ifdef DEBUG_1
         printf("\nIteration %d\n", iter_index);
@@ -86,6 +84,8 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
         printf("relres = %f\n", relres);
 #endif
     }
+    // Return the number of iters to caller
+    *num_iter = iter_index;
     // calculate norm of r
     // double normR = sqrt(ddot(r, r, n));
     // relative residual norm = norm(b-A*x)/norm(b)
