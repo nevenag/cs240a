@@ -44,14 +44,32 @@ int main( int argc, char* argv[] ) {
 	}
 	writeOutX = atoi( argv[argc-1] ); // Write X to file if true, do not write if unspecified.
     double x[n];
-	// Start Timer
-	t1 = MPI_Wtime();
+    // Get number of processors and our processor number
+    int rank, size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    // Sequential or parallel algorithm?
+    if (size == 1)
+    {
+        // Sequential
+    	// Start Timer
+    	t1 = MPI_Wtime();
+    	// CG Solve here!
+        cgsolve_sequential(k, x, &norm, &iterations);
+    	// End Timer
+    	t2 = MPI_Wtime();
+    }
+    else
+    {
+        // Parallel        
+    	// Start Timer
+    	t1 = MPI_Wtime();
+    	// CG Solve here!
+        cgsolve_parallel(k, rank, size, x, &norm, &iterations);
+    	// End Timer
+    	t2 = MPI_Wtime();
+    }
 	
-	// CG Solve here!
-    cgsolve(k, x, &norm, &iterations);
-	
-	// End Timer
-	t2 = MPI_Wtime();
 	
 	if ( writeOutX ) {
 		save_vec( k, x );

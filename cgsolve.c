@@ -20,7 +20,7 @@ void print_vector(double *vector, int size)
   return;
 }
 
-void cgsolve(int k, double* result, double* norm, int* num_iter)
+void cgsolve_sequential(int k, double* result, double* norm, int* num_iter)
 {
     int n = k*k, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
     double x[n], r[n], r_new[n], d[n];
@@ -90,4 +90,25 @@ void cgsolve(int k, double* result, double* norm, int* num_iter)
     // Store x into result
     memcpy(result, x, n*sizeof(double));
     return;
+}
+/**
+ * This method should only get called if size > 1, i.e. more than one processor is available.
+ * Per the problem description, this method also assumes that k is evenly divisible by size.
+**/
+void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, int* num_iter)
+{
+    int vector_size = (k*k)/size, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
+    // Distributed vectors have only n/p elements each
+    double x[vector_size], r[vector_size], r_new[vector_size], d[vector_size];
+    // x = zeros(n, 1)
+    for (i = 0; i < vector_size; i++)
+    {
+        x[i] = 0;
+    }
+    // r = b
+    for (i = 0; i < vector_size; i++)
+    {
+        r[i] = cs240_getB(i, n);
+    }
+    
 }
