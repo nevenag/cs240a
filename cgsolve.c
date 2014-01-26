@@ -1,6 +1,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include "mpi.h"
 #include "cgsolve.h"
 #include "hw2harness.h"
 #include "matvec.h"
@@ -154,7 +155,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
             }
             else
             {
-                MPI_Send(btb, 1, MPI_DOUBLE, rank - increment, tag, MPI_COMM_WORLD);
+                MPI_Send(&btb, 1, MPI_DOUBLE, rank - increment, tag, MPI_COMM_WORLD);
                 break;
             }
         }
@@ -164,7 +165,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
         // Some processes break out of the above loop earlier than others, need to synchronize here
         MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG_2
-        printf("Process #%d synchronized.\n", rank)
+        printf("Process #%d synchronized.\n", rank);
 #endif
         cgsolve_slave_routine();
     }
