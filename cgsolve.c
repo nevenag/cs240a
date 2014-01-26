@@ -95,7 +95,7 @@ void cgsolve_sequential(int k, double* result, double* norm, int* num_iter)
 }
 // Helper methods for cgsolve_parallel that implement the different routines
 // (i.e. different modes of operation in the main loop)
-void cgsolve_master_routine();
+void cgsolve_master_routine(int k, int vector_size, double normB, double *r);
 void cgsolve_slave_routine();
 /**
  * This method should only get called if size > 1, i.e. more than one processor is available.
@@ -103,75 +103,36 @@ void cgsolve_slave_routine();
 **/
 void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, int* num_iter)
 {
-    int vector_size = (k*k)/size, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0, tag = 0;
-    MPI_Status status;
-    // Distributed vectors have only n/p elements each
-    double x[vector_size], r[vector_size], r_new[vector_size], d[vector_size];
-    // x = zeros(n, 1)
-    for (i = 0; i < vector_size; i++)
-    {
-        x[i] = 0;
-    }
+    int vector_size = (k*k)/size, i = 0, tag = 0;
+    double r[vector_size];
     // r = b
     for (i = 0; i < vector_size; i++)
     {
         r[i] = cs240_getB(i + vector_size*rank, k*k);
     }
-    // calculate the ddot of our chunk of b and set relres to 1.0 (relres = norm(b-Ax)/norm(b) = norm(b)/norm(b), x=zeros(n, 1))
-    // Note that this is only the norm of the portion of b that we are responsible for
-    double btb = ddot(r, r, vector_size), relres = 1.0;
     // Assumes size = 2^x
     int log_p = log(size)/log(2);
     // This is the master, who will collect all the results together
     if (rank == 0)
     {
-        // Need to aggregate the ddot(btb) results
-        for (i = 0; i < log_p; i++)
-        {
-            int src_rank = pow(2, i);
-            double message;
-            MPI_Recv(&message, 1, MPI_DOUBLE, src_rank, tag, MPI_COMM_WORLD, &status);
-#ifdef DEBUG_2
-            printf("Process 0 received %f from process %d\n", message, src_rank);
-#endif
-            btb += message;
-        }
+        double btb = ddot_distributed(r, r, vector_size, rank, size);
         // Now calculate the norm of b
         double normB = sqrt(btb);
+        // We should be the last one out
         MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG_2
         printf("normB = %f\n", normB);
 #endif
-        cgsolve_master_routine();
+        cgsolve_master_routine(k, vector_size, normB, r);
     }
     else
     {
-        // Need to send the normB results to neigbors
-        for (i = 0; i < log_p; i++)
-        {
-            int increment = pow(2, i), rank_to_use = rank / increment;
-            double message;
-            if (rank_to_use % 2 == 0)
-            {
-                MPI_Recv(&message, 1, MPI_DOUBLE, rank + increment, tag, MPI_COMM_WORLD, &status);
-#ifdef DEBUG_2
-                printf("Process %d received %f from process %d\n", rank, message, rank + increment);
-#endif
-                btb += message;
-            }
-            else
-            {
-                MPI_Send(&btb, 1, MPI_DOUBLE, rank - increment, tag, MPI_COMM_WORLD);
-#ifdef DEBUG_2
-                printf("Process %d sent %f to process %d\n", rank, btb, rank - increment);
-#endif
-                break;
-            }
-        }
+        // This return value doesnt actually mean anything useful
+        double garbage = ddot_distributed(r, r, vector_size, rank, size);
 #ifdef DEBUG_2
         printf("Process #%d waiting to synchronize...\n", rank);
 #endif
-        // Some processes break out of the above loop earlier than others, need to synchronize here
+        // Some processes break out of ddot_distributed earlier than others, need to synchronize here
         MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG_2
         printf("Process #%d synchronized.\n", rank);
@@ -181,10 +142,52 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
 }
 /**
  * The master routine for cgsolve_parallel. There is only one master.
+ * The r vector comes in already initialized to be the chunk of b we are
+ * responsible for.
 **/
-void cgsolve_master_routine()
+void cgsolve_master_routine(int k, int vector_size, double normB, double *r)
 {
-    // TODO: Implement this.
+    // TODO: Get this to work
+    return;
+    
+    int maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
+    double relres = 1.0;
+    // Distributed vectors have only n/p elements each
+    double x[vector_size], r_new[vector_size], d[vector_size];
+    // x = zeros(n, 1)
+    for (i = 0; i < vector_size; i++)
+    {
+        x[i] = 0;
+    }
+    // Initialize rtr
+    double rtr = ddot(r, r, vector_size);
+    // d = r
+    memcpy(d, r, vector_size*sizeof(double));
+    while (relres > .00001 && iter_index < maxiters)
+    {
+        iter_index++;
+        // A*d
+        double matvec_result[vector_size];
+        matvec(d, matvec_result, k);
+        // alpha = r'*r / d'*A*d
+        double alpha = rtr / ddot(matvec_result, d, vector_size);
+        // x = x + alpha*d
+        daxpy(alpha, d, 1, x, vector_size, x);
+        // rnew = r - alpha*A*d
+        daxpy(1, r, -alpha, matvec_result, vector_size, r_new);
+        // r' * r
+        double rtrold = rtr;
+        // r_new' * r_new
+        rtr = ddot(r_new, r_new, vector_size);
+        // Update residual
+        relres = sqrt(rtr) / normB;
+        // beta = rnew'*rnew / r'*r
+        double beta = rtr / rtrold;
+        // r = r_new
+        memcpy (r, r_new, vector_size*sizeof(double));
+        // d = r + beta*d
+        daxpy(1, r, beta, d, vector_size, d);
+    }
 }
 /**
  * The slave routine for cgsolve_parallel. Everyone is a slave besides the master.
