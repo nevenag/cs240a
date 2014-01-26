@@ -115,7 +115,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
     // r = b
     for (i = 0; i < vector_size; i++)
     {
-        r[i] = cs240_getB(i, k*k);
+        r[i] = cs240_getB(i + vector_size*rank, k*k);
     }
     // calculate the ddot of our chunk of b and set relres to 1.0 (relres = norm(b-Ax)/norm(b) = norm(b)/norm(b), x=zeros(n, 1))
     // Note that this is only the norm of the portion of b that we are responsible for
@@ -132,7 +132,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
             double message;
             MPI_Recv(&message, 1, MPI_DOUBLE, src_rank, tag, MPI_COMM_WORLD, &status);
 #ifdef DEBUG_2
-            printf("Process 0 received %f from process %d", message, src_rank);
+            printf("Process 0 received %f from process %d\n", message, src_rank);
 #endif
             btb += message;
         }
