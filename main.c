@@ -2,8 +2,13 @@
  * Main and supporting functions for the Conjugate Gradient Solver on a 5-point stencil
  *
  * NAMES:
+ *  Chris Horuk
+ *  Nevena Golubovic
  * PERMS:
+ *  4235677
+ *  
  * DATE:
+ *  1/28/14
  */
 #include "mpi.h"
 #include "hw2harness.h"
@@ -12,10 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ARRAY_SIZE(array) sizeof(array) / sizeof(array[0])
+
 double* load_vec( char* filename, int* k );
 void save_vec( int k, double* x );
-
-
 
 int main( int argc, char* argv[] ) {
 	int writeOutX = 0;
@@ -58,28 +63,72 @@ int main( int argc, char* argv[] ) {
         cgsolve_sequential(k, x, &norm, &iterations);
     	// End Timer
     	t2 = MPI_Wtime();
+        // Write x to file if necessary
+    	if ( writeOutX ) {
+    		save_vec( k, x );
+    	}
+    	// Output
+    	printf( "Problem size (k): %d\n",k);
+    	printf( "Norm of the residual after %d iterations: %lf\n",iterations,norm);
+    	printf( "Elapsed time during CGSOLVE: %lf\n", t1-t2);
+        printf( "Result of cs240_verify: %d\n" , cs240_verify(x, k, t1-t2));
     }
     else
     {
-        // Parallel        
+        // Parallel
+        int chunkSize = n/size;
+        double tempX[chunkSize];
     	// Start Timer
     	t1 = MPI_Wtime();
     	// CG Solve here!
-        cgsolve_parallel(k, rank, size, x, &norm, &iterations);
+        if (rank == 0)
+        {
+            cgsolve_parallel(k, rank, size, x, &norm, &iterations);
+        }
+        else
+        {
+            cgsolve_parallel(k, rank, size, tempX, &norm, &iterations);
+        }
     	// End Timer
     	t2 = MPI_Wtime();
+        // Need to aggregate all the tempX vectors onto one processor now in the correct order
+        int i, tag = 0;
+        MPI_Status status;
+        // 0 sends to 1, 1 adds its tempX at the end and sends to 2, and so on...
+        for (i = 0; i < size; i++)
+        {
+            if (rank == i)
+            {
+                MPI_Send(x, n, MPI_DOUBLE, rank+1, tag, MPI_COMM_WORLD);
+            }
+            else if (rank == i + 1)
+            {
+                MPI_Recv(x, n, MPI_DOUBLE, rank-1, tag, MPI_COMM_WORLD, &status);
+                // Need to place our tempX at the end of x now
+                int xIndex = (i+1) * chunkSize, j;
+                for (j = 0; j < chunkSize; j++)
+                {
+                    x[xIndex] = tempX[j];
+                    xIndex++;
+                }
+            }
+            // necessary?
+            MPI_Barrier(MPI_COMM_WORLD);
+        }
+        // Last processor should have all of x now
+        if (rank == size - 1)
+        {
+            // Write x to file if necessary
+        	if ( writeOutX ) {
+        		save_vec( k, x );
+        	}
+        	// Output
+        	printf( "Problem size (k): %d\n",k);
+        	printf( "Norm of the residual after %d iterations: %lf\n",iterations,norm);
+        	printf( "Elapsed time during CGSOLVE: %lf\n", t1-t2);
+            printf( "Result of cs240_verify: %d\n" , cs240_verify(x, k, t1-t2));
+        }
     }
-	
-	
-	if ( writeOutX ) {
-		save_vec( k, x );
-	}
-		
-	// Output
-	printf( "Problem size (k): %d\n",k);
-	printf( "Norm of the residual after %d iterations: %lf\n",iterations,norm);
-	printf( "Elapsed time during CGSOLVE: %lf\n", t1-t2);
-    printf( "Result of cs240_verify: %d\n" , cs240_verify(x, k, t1-t2));
 	
 	MPI_Finalize();
 	

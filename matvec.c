@@ -64,28 +64,28 @@ double *matvec_parallel(double *in, double *out, int k, int rank, int size)
 	//not sure if I should stich it this way:
 	// TODO check this
 	for (i = 0; i < size; i++){
-	  MPI_Recv(&outp, share, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status);
+	  MPI_Recv(outp, share, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status);
 	  memcpy(out+(i*share), outp, share*sizeof(double));
 	}
       }
       
     }else{ /*slave*/
       // receive the first msg with iterator
-      MPI_Recv(&ibm, 1, MPI_INT, i, tag, MPI_COMM_WORLD, &status);
+      MPI_Recv(ibm, 1, MPI_INT, i, tag, MPI_COMM_WORLD, &status);
       // recalculate rowi and coli
-      rowi = *ibm / k;
-      coli = *ibm % k;
+      // rowi = *ibm / k;
+      // coli = *ibm % k;
       double message[3*share];
       
-      MPI_Recv(&message, 3*share, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status);
+      MPI_Recv(message, 3*share, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status);
       double outp[share];
       double inp[3*share]; // in parallel
       memcpy(inp, message, 3*share*sizeof(double));
       
       // start from already assigned values
-      for (rowi; rowi < k; rowi++)
+      for (rowi = *ibm / k; rowi < k; rowi++)
       {
-        for (coli; coli < k; coli++)
+        for (coli = *ibm % k; coli < k; coli++)
         {
             int ibm_new = rowi * k + coli;
             // Only 5 possible non-zero values, the middle one always exists
