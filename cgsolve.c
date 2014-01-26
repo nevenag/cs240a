@@ -151,11 +151,17 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
             if (rank_to_use % 2 == 0)
             {
                 MPI_Recv(&message, 1, MPI_DOUBLE, rank + increment, tag, MPI_COMM_WORLD, &status);
+#ifdef DEBUG_2
+                printf("Process %d received %f from process %d\n", rank, message, rank + increment);
+#endif
                 btb += message;
             }
             else
             {
                 MPI_Send(&btb, 1, MPI_DOUBLE, rank - increment, tag, MPI_COMM_WORLD);
+#ifdef DEBUG_2
+                printf("Process %d sent %f to process %d\n", rank, btb, rank - increment);
+#endif
                 break;
             }
         }
