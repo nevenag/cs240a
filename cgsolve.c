@@ -131,13 +131,16 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
             int src_rank = pow(2, i);
             double message;
             MPI_Recv(&message, 1, MPI_DOUBLE, src_rank, tag, MPI_COMM_WORLD, &status);
+#ifdef DEBUG_2
+            printf("Process 0 received %f from process %d", message, src_rank);
+#endif
             btb += message;
         }
         // Now calculate the norm of b
         double normB = sqrt(btb);
         MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG_2
-        printf("normB = %f", normB);
+        printf("normB = %f\n", normB);
 #endif
         cgsolve_master_routine();
     }
