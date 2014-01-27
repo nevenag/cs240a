@@ -24,7 +24,7 @@ extern void print_vector(double *vector, int size)
 
 void cgsolve_sequential(int k, double* result, double* norm, int* num_iter)
 {
-    int n = k*k, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
+    int n = k*k, maxiters = 100, iter_index = 0, i = 0;
     double x[n], r[n], r_new[n], d[n];
     // x = zeros(n, 1)
     for (i = 0; i<n; i++)
@@ -42,7 +42,7 @@ void cgsolve_sequential(int k, double* result, double* norm, int* num_iter)
     double rtr = ddot(r, r, n);
     // d = r
     memcpy(d, r, n*sizeof(double));
-    while (relres > .00001 && iter_index < maxiters)
+    while (iter_index < maxiters)
     {
 #ifdef DEBUG_1
         printf("\nIteration %d\n", iter_index);
@@ -158,7 +158,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
 **/
 double cgsolve_master_routine(int k, int rank, int size, double normB, double *r, double *x, int *num_iter)
 {
-    int vector_size = (k*k)/size, tag = 0, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
+    int vector_size = (k*k)/size, tag = 0, maxiters = 100, iter_index = 0, i = 0;
     double relres = 1.0;
     // Distributed vectors have only n/p elements each
     double r_new[vector_size], d[vector_size];
@@ -169,7 +169,7 @@ double cgsolve_master_routine(int k, int rank, int size, double normB, double *r
     // d = r
     memcpy(d, r, vector_size*sizeof(double));
     // The main loop, we will need to broadcast relres to all the slaves at the end of the loop
-    while (relres > .00001 && iter_index < maxiters)
+    while (iter_index < maxiters)
     {
         iter_index++;
 
@@ -221,7 +221,7 @@ double cgsolve_master_routine(int k, int rank, int size, double normB, double *r
 **/
 double cgsolve_slave_routine(int k, int rank, int size, double *r, double *x, int *num_iter)
 {
-    int vector_size = (k*k)/size, tag = 0, maxiters = PROPORTIONALITY_CONSTANT * k, iter_index = 0, i = 0;
+    int vector_size = (k*k)/size, tag = 0, maxiters = 100, iter_index = 0, i = 0;
     double relres = 1.0;
     // Distributed vectors have only n/p elements each
     double r_new[vector_size], d[vector_size];
@@ -232,7 +232,7 @@ double cgsolve_slave_routine(int k, int rank, int size, double *r, double *x, in
     // d = r
     memcpy(d, r, vector_size*sizeof(double));
     // The main loop, we will need to get relres from the master at the end of the loop
-    while (relres > .00001 && iter_index < maxiters)
+    while (iter_index < maxiters)
     {
         iter_index++;
         
