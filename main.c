@@ -95,7 +95,7 @@ int main( int argc, char* argv[] ) {
         int i, tag = 0;
         MPI_Status status;
         // 0 sends to 1, 1 adds its tempX at the end and sends to 2, and so on...
-        for (i = 0; i < size; i++)
+        for (i = 0; i < size-1; i++)
         {
             if (rank == i)
             {

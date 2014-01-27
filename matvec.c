@@ -2,7 +2,7 @@
 #include "matvec.h"
 #include "mpi.h"
 
-#define DEBUG_MV
+// #define DEBUG_MV
 
 extern void print_vector(double *vector, int size);
 
@@ -50,7 +50,7 @@ void matvec_parallel(double *in, double *out, int k, int rank, int size)
 #endif
     
     
-    /*top and bottom row*/
+    /*top chunk*/
     if (rank == 0) 
     {
        double in_tmp[share+k];
@@ -86,6 +86,7 @@ void matvec_parallel(double *in, double *out, int k, int rank, int size)
            out[i] -= in_tmp[i+k];
       }
     }
+    /*bottom chunk*/
     else if (rank == size - 1)
     {
       double in_tmp[share+k];
@@ -122,7 +123,6 @@ void matvec_parallel(double *in, double *out, int k, int rank, int size)
          if (rowi != k-1)
            out[i-k] -= in_tmp[i+k];
       }
-      printf("after for loop\n");
     }
     else
     {

@@ -5,7 +5,7 @@
 #include "ddot.h"
 
 // #define DEBUG_1
-#define DEBUG_2
+// #define DEBUG_2
 
 double ddot(double* a, double* b, int n){
   int i;  

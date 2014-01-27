@@ -172,9 +172,11 @@ double cgsolve_master_routine(int k, int rank, int size, double normB, double *r
     while (relres > .00001 && iter_index < maxiters)
     {
         iter_index++;
-        
+
         // A*d
         double matvec_result[vector_size];
+        // TODO: ??Need to barrier before matvec_parallel call so that we are all in sync??
+        // MPI_Barrier(MPI_COMM_WORLD);
         matvec_parallel(d, matvec_result, k, rank, size);
         
         // alpha = r'*r / d'*A*d
@@ -236,6 +238,8 @@ double cgsolve_slave_routine(int k, int rank, int size, double *r, double *x, in
         
         // A*d
         double matvec_result[vector_size];
+        // TODO: ??Need to barrier before matvec_parallel call so that we are all in sync??
+        // MPI_Barrier(MPI_COMM_WORLD);
         matvec_parallel(d, matvec_result, k, rank, size);
         
         // alpha = r'*r / d'*A*d
