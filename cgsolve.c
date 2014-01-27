@@ -10,9 +10,9 @@
 
 #define PROPORTIONALITY_CONSTANT 5
 // #define DEBUG_1
-#define DEBUG_2
+//#define DEBUG_2
 
-void print_vector(double *vector, int size)
+extern void print_vector(double *vector, int size)
 {
   int i;
   for (i = 0; i < size; i++)
@@ -175,7 +175,7 @@ double cgsolve_master_routine(int k, int rank, int size, double normB, double *r
         
         // A*d
         double matvec_result[vector_size];
-        matvec(d, matvec_result, k);
+        matvec_parallel(d, matvec_result, k, rank, size);
         
         // alpha = r'*r / d'*A*d
         double alpha = rtr / ddot_distributed(matvec_result, d, vector_size, rank, size);
@@ -236,7 +236,7 @@ double cgsolve_slave_routine(int k, int rank, int size, double *r, double *x, in
         
         // A*d
         double matvec_result[vector_size];
-        matvec(d, matvec_result, k);
+        matvec_parallel(d, matvec_result, k, rank, size);
         
         // alpha = r'*r / d'*A*d
         double alpha = ddot_distributed(matvec_result, d, vector_size, rank, size);
