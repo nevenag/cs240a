@@ -221,7 +221,7 @@ double cgsolve_master_routine(int k, int rank, int size, double normB, double *r
 **/
 double cgsolve_slave_routine(int k, int rank, int size, double *r, double *x, int *num_iter)
 {
-    int vector_size = (k*k)/size, tag = 0, maxiters = 0, iter_index = 0, i = 0;
+    int vector_size = (k*k)/size, tag = 0, maxiters = 10, iter_index = 0, i = 0;
     double relres = 1.0;
     // Distributed vectors have only n/p elements each
     double r_new[vector_size], d[vector_size];
