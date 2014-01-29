@@ -124,7 +124,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
         // Now calculate the norm of b
         double normB = sqrt(btb);
         // We should be the last one out
-        MPI_Barrier(MPI_COMM_WORLD);
+        // MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG_2
         printf("normB = %f\n", normB);
 #endif
@@ -139,7 +139,7 @@ void cgsolve_parallel(int k, int rank, int size, double* result, double* norm, i
         printf("Process #%d waiting to synchronize...\n", rank);
 #endif
         // Some processes break out of ddot_distributed earlier than others, need to synchronize here
-        MPI_Barrier(MPI_COMM_WORLD);
+        // MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG_2
         printf("Process #%d synchronized.\n", rank);
 #endif
@@ -165,7 +165,7 @@ double cgsolve_master_routine(int k, int rank, int size, double normB, double *r
     // Initialize rtr
     double rtr = ddot_distributed(r, r, vector_size, rank, size);
     // necessary?
-    MPI_Barrier(MPI_COMM_WORLD);
+    // MPI_Barrier(MPI_COMM_WORLD);
     // d = r
     memcpy(d, r, vector_size*sizeof(double));
     // The main loop, we will need to broadcast relres to all the slaves at the end of the loop
@@ -228,7 +228,7 @@ double cgsolve_slave_routine(int k, int rank, int size, double *r, double *x, in
     // Initialize rtr, although again the return value here is meaningless for slaves
     double rtr_garbage = ddot_distributed(r, r, vector_size, rank, size);
     // necessary?
-    MPI_Barrier(MPI_COMM_WORLD);
+    // MPI_Barrier(MPI_COMM_WORLD);
     // d = r
     memcpy(d, r, vector_size*sizeof(double));
     // The main loop, we will need to get relres from the master at the end of the loop
