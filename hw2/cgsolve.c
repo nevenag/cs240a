@@ -10,7 +10,7 @@
 
 #define PROPORTIONALITY_CONSTANT 5
 // #define DEBUG_1
-//#define DEBUG_2
+// #define DEBUG_2
 
 extern void print_vector(double *vector, int size)
 {
