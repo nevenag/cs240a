@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
          	    parresult = hyperobject_cilkified(a, b, n);
                 __cilkview_report(&start, NULL, "hyper_cilkified", CV_REPORT_WRITE_TO_RESULTS);
                 break;
-            case default:
+            default:
                 break;
         }
         return 0;
