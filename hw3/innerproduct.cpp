@@ -187,7 +187,19 @@ int main(int argc, char* argv[])
     {
         n = std::atoi(argv[1]);
         alg = std::atoi(argv[2]);
+        
+    	double * a = new double[n];
+    	double * b = new double[n];
+    	for (int i = 0; i < n; ++i)
+    	{
+            a[i] = i;
+            b[i] = i;
+    	}
+        std::random_shuffle(a, a + n);
+        std::random_shuffle(b, b + n);
+        
         cilkview_data_t start;
+        double parresult;
         switch(alg)
         {
             case 1:
