@@ -181,7 +181,38 @@ int inn_prod_driver(int n)
 int main(int argc, char* argv[])
 {
     int n = 1 * 1000 * 1000;
-    if (argc > 1) {
+    
+    int alg = 1;
+    if (argc == 3)
+    {
+        n = std::atoi(argv[1]);
+        alg = std::atoi(argv[2]);
+        cilkview_data_t start;
+        switch(alg)
+        {
+            case 1:
+        		__cilkview_query(start);
+         	    parresult = rec_cilkified(a, b, n);
+                __cilkview_report(&start, NULL, "rec_cilkified", CV_REPORT_WRITE_TO_RESULTS);
+                break;
+            case 2:
+        		__cilkview_query(start);
+         	    parresult = loop_cilkified(a, b, n);
+                __cilkview_report(&start, NULL, "loop_cilkified", CV_REPORT_WRITE_TO_RESULTS);
+                break;
+            case 3:
+        		__cilkview_query(start);
+         	    parresult = hyperobject_cilkified(a, b, n);
+                __cilkview_report(&start, NULL, "hyper_cilkified", CV_REPORT_WRITE_TO_RESULTS);
+                break;
+            case default:
+                break;
+        }
+        return 0;
+    }
+    
+    if (argc == 2)
+    {
         n = std::atoi(argv[1]);
     }
 
