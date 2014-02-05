@@ -1,6 +1,6 @@
 #include <cilk/cilk.h>
 #include <cilk/reducer_opadd.h>
-
+#include <cilkview.h>
 #include <mutex>
 
 #include <algorithm>
@@ -103,12 +103,17 @@ int inn_prod_driver(int n)
 	/***********************************************************/
 	/********  START TESTING RECURSIVE CILKFIED VERSION  *******/
 	/***********************************************************/
-
+    cilkview_data_t start;
+    
 	double parresult = rec_cilkified(a, b, n);   
 	t1 = example_get_time();
 	for(int i=0; i< ITERS; ++i)
 	{
-		parresult = rec_cilkified(a, b, n);   
+        __cilkview_query(start);
+		parresult = rec_cilkified(a, b, n);
+        char name[20];
+        snprintf(name, 20, "rec_cilkified-%d", i);
+        __cilkview_report(&start, NULL, name, CV_REPORT_WRITE_TO_RESULTS);
 	}
  	t2 = example_get_time();
 
@@ -127,8 +132,11 @@ int inn_prod_driver(int n)
 	t1 = example_get_time();
 	for(int i=0; i< ITERS; ++i)
 	{
-		//parresult = loop_cilkified(a, b, n);   
- 	        parresult = loop_cilkified(a, b, n);   
+		__cilkview_query(start);
+ 	    parresult = loop_cilkified(a, b, n);
+        char name[20];
+        snprintf(name, 20, "loop_cilkified-%d", i);
+        __cilkview_report(&start, NULL, name, CV_REPORT_WRITE_TO_RESULTS);
 	}
  	t2 = example_get_time();
 
@@ -149,7 +157,11 @@ int inn_prod_driver(int n)
 	t1 = example_get_time();
 	for(int i=0; i< ITERS; ++i)
 	{
-		parresult = hyperobject_cilkified(a, b, n);   
+        __cilkview_query(start);
+		parresult = hyperobject_cilkified(a, b, n);
+        char name[20];
+        snprintf(name, 20, "hyper_cilkified-%d", i);
+        __cilkview_report(&start, NULL, name, CV_REPORT_WRITE_TO_RESULTS);
 	}
  	t2 = example_get_time();
 
@@ -163,7 +175,7 @@ int inn_prod_driver(int n)
         
 	delete [] a;
 	delete [] b;
-    	return 0;
+    return 0;
 }
 
 int main(int argc, char* argv[])

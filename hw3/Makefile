@@ -1,7 +1,7 @@
 # Makefile for Cilk Plus inner products.  See source code for details.
 
 CILKPP	= icc
-LIBARG	= -O2 -std=c++0x
+LIBARG	= -O2 -std=c++0x -I/opt/cilkutil/include/cilktools/
 TARGET	= innerproduct 
 SRC	= $(addsuffix .cpp,$(TARGET))
 
