@@ -4,14 +4,102 @@
 
 #define MAX_THREADS 320
 
-double betweennessCentrality_parallel(graph* G, double* BC) {
+double betweennessCentrality_parallel(graph* G, double* BC)
+{
   double elapsed_time;
   int i;
-  double c;
-  cilk_for(i=0; i<10;i++){
-      c+= i;
+  int n = G->nv;
+  int m = G->ne;
+  int p = 10;
+  int chunkSize = n/p;
+  int leftover = n%p;
+  cilk_for (i = 0; i < p; i++)
+  {
+      // Last processor gets leftover nodes
+      if (i == p-1)
+      {
+          chunkSize += leftover;
+      }
+      // Holds current vertex number
+      int s;
+      // Stack of explored vertices
+      int *stack = (int *) malloc(n*sizeof(int));
+      // Predecessor list
+      plist *P = (plist *) calloc(n, sizeof(plist));
+      // Alloc predecessor list lists with lots of magic and hope it works
+      int *in_degree = (int *) calloc(n+1, sizeof(int));
+      int *numEdges = (int *) malloc((n+1)*sizeof(int));
+      int index;
+      for (index = 0; index < m; i++) {
+        int vertex = G->nbr[index];
+        in_degree[vertex]++;
+      }
+      prefix_sums(in_degree, numEdges, n);
+      pListMem = (int *) malloc(m*sizeof(int));
+      for (index = 0; index < n; index++)
+      {
+        P[index].list = pListMem + numEdges[index];
+      }
+      free(numEdges);
+      // Queue Q
+      int *queue = (int *) malloc(n*sizeof(int));
+      // Sigma is the number of shortest paths through this node
+      double *sigma = (int *) calloc(n, sizeof(double));
+      // Dist is the distance of each node from starting
+      int *dist = (int *) malloc(n*sizeof(int));
+      
+      for (s = i*chunkSize; s < (i*chunkSize + chunkSize); s++)
+      {
+          // Fresh starting vertex so reset stack and queue
+          int topOfStack = 0;
+          int frontOfQueue = 0;
+          int endOfQueue = 0;
+          // Also need to set all Plist entries to empty with the magic from above
+          for (index = 0; index < n; index++)
+          {
+              P[index].degree = in_degree[index];
+              P[index].count = 0;
+          }
+          // Shortest path to ourself
+          sigma[s] = 1.0;
+          // Initialize distances to be -1
+          memset(dist, -1, n*sizeof(int));
+          // Except ours
+          dist[s] = 0;
+          // Enqueue ourself
+          queue[endOfQueue] = s;
+          endOfQueue = (endOfQueue + 1) % n;
+          while (endOfQueue != frontOfQueue)
+          {
+              // Dequeue v from queue
+              int v = queue[frontOfQueue];
+              frontOfQueue = (frontOfQueue + 1) % n;
+              // Push v to stack
+              stack[topOfStack] = s;
+              topOfStack++;
+              // For every neighbor of v
+              int j;
+              for ( j=G->firstnbr[v]; j<G->firstnbr[v+1]; j++ )
+              {
+                  // w is the neighbor
+                  int w = G->nbr[j];
+                  if (dist[w] < 0)
+                  {
+                      // Enqueue w to queue
+                      queue[endOfQueue] = w;
+                      endOfQueue = (endOfQueue + 1) % n;
+                      dist[w] = dist[v] + 1;
+                  }
+                  if (dist[w] == dist[v] + 1)
+                  {
+                      sigma[w] += sigma[v];
+                      P[w].list[P[w].count++] = v;
+                  }
+              }
+          }
+      }
+      free(in_degree);
   }
-  printf("c = %f\n",c);
   return elapsed_time;
 }
 
