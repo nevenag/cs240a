@@ -13,6 +13,8 @@ double betweennessCentrality_parallel(graph* G, double* BC)
   int p = 10;
   int chunkSize = n/p;
   int leftover = n%p;
+  // Initialize all betweenness centrality scores to 0
+  double BC = (double *) calloc(n, sizeof(double));
   cilk_for (i = 0; i < p; i++)
   {
       // Last processor gets leftover nodes
@@ -88,13 +90,36 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                       // Enqueue w to queue
                       queue[endOfQueue] = w;
                       endOfQueue = (endOfQueue + 1) % n;
+                      // Update distance
                       dist[w] = dist[v] + 1;
                   }
                   if (dist[w] == dist[v] + 1)
                   {
+                      // Update shortest paths count
                       sigma[w] += sigma[v];
+                      // Append v to predecessor list of w
                       P[w].list[P[w].count++] = v;
                   }
+              }
+          }
+          // Set all deltas to zero
+          double delta = (double *) calloc(n, sizeof(double));
+          while (topOfStack > -1)
+          {
+              // Pop w from stack
+              int w = stack[topOfStack];
+              topOfStack--;
+              // Loop through every predecessor of w
+              for (index = 0; index < P[w].count; index++)
+              {
+                  // v is a predecessor of w
+                  int v = P[w].list[index];
+                  delta[v] = delta[v] + (sigma[v] / sigma[w])*(1 + delta[w]);
+              }
+              // If this isnt the starting vertex, then update BC score
+              if (w != s)
+              {
+                  BC[w] += delta[w];
               }
           }
       }
