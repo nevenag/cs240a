@@ -13,8 +13,8 @@ double betweennessCentrality_parallel(graph* G, double* BC)
   int p = 10;
   int chunkSize = n/p;
   int leftover = n%p;
-  // Initialize all betweenness centrality scores to 0
-  double BC = (double *) calloc(n, sizeof(double));
+  /* Start timing code from here */
+  elapsed_time = get_seconds();
   cilk_for (i = 0; i < p; i++)
   {
       // Last processor gets leftover nodes
@@ -32,12 +32,12 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       int *in_degree = (int *) calloc(n+1, sizeof(int));
       int *numEdges = (int *) malloc((n+1)*sizeof(int));
       int index;
-      for (index = 0; index < m; i++) {
+      for (index = 0; index < m; index++) {
         int vertex = G->nbr[index];
         in_degree[vertex]++;
       }
       prefix_sums(in_degree, numEdges, n);
-      pListMem = (int *) malloc(m*sizeof(int));
+      int *pListMem = (int *) malloc(m*sizeof(int));
       for (index = 0; index < n; index++)
       {
         P[index].list = pListMem + numEdges[index];
@@ -46,7 +46,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       // Queue Q
       int *queue = (int *) malloc(n*sizeof(int));
       // Sigma is the number of shortest paths through this node
-      double *sigma = (int *) calloc(n, sizeof(double));
+      double *sigma = (double *) calloc(n, sizeof(double));
       // Dist is the distance of each node from starting
       int *dist = (int *) malloc(n*sizeof(int));
       
@@ -103,7 +103,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
               }
           }
           // Set all deltas to zero
-          double delta = (double *) calloc(n, sizeof(double));
+          double *delta = (double *) calloc(n, sizeof(double));
           while (topOfStack > -1)
           {
               // Pop w from stack
@@ -122,9 +122,17 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                   BC[w] += delta[w];
               }
           }
+          free(delta);
       }
+      free(stack);
+      free(queue);
+      free(P);
+      free(sigma);
+      free(dist);
+      free(pListMem);
       free(in_degree);
   }
+  elapsed_time = get_seconds() - elapsed_time;
   return elapsed_time;
 }
 
