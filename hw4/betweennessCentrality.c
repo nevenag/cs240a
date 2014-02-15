@@ -65,6 +65,8 @@ double betweennessCentrality_parallel(graph* G, double* BC)
               P[index].degree = in_degree[index];
               P[index].count = 0;
           }
+          // Initialize shortest paths to 0
+          memset(sigma, 0.0, n*sizeof(double));
           // Shortest path to ourself
           sigma[s] = 1.0;
           // Initialize distances to be -1
@@ -108,11 +110,10 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           // Set all deltas to zero
           double *delta = (double *) calloc(n, sizeof(double));
           printf("Summing up deltas now. ToS is %d\n",topOfStack);
-          while (topOfStack > -1)
+          while (topOfStack > 0)
           {
               // Pop w from stack
-              int w = stack[topOfStack];
-              topOfStack--;
+              int w = stack[--topOfStack];
               printf("Just popped %d from stack. ToS is now %d\n",w,topOfStack);
               // Loop through every predecessor of w
               for (index = 0; index < P[w].count; index++)
