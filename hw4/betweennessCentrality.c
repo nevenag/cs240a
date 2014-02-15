@@ -27,13 +27,11 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       int *in_degree = (int *) calloc(n+1, sizeof(int));
       int *numEdges = (int *) malloc((n+1)*sizeof(int));
       int index;
-      printf("Hasn't segfaulted yet\n");
       for (index = 0; index < m; index++)
       {
         int vertex = G->nbr[index];
         in_degree[vertex]++;
       }
-      printf("Has it segfaulted yet?\n");
       prefix_sums(in_degree, numEdges, n);
       int *pListMem = (int *) malloc(m*sizeof(int));
       for (index = 0; index < n; index++)
@@ -47,13 +45,16 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       double *sigma = (double *) calloc(n, sizeof(double));
       // Dist is the distance of each node from starting
       int *dist = (int *) malloc(n*sizeof(int));
-      printf("1");
+      // Last processor will have different chunk size
       int mySize = chunkSize;
       // Last processor gets leftover nodes
       if (i == p-1)
       {
           mySize += leftover;
       }
+      // Set all deltas to zero
+      double *delta = (double *) calloc(n, sizeof(double));
+      // Main Loop
       for (s = i*chunkSize; s < (i*chunkSize + mySize); s++)
       {
           // Fresh starting vertex so reset stack and queue
@@ -106,8 +107,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                   }
               }
           }
-          // Set all deltas to zero
-          double *delta = (double *) calloc(n, sizeof(double));
+          
           while (topOfStack > -1)
           {
               // Pop w from stack
@@ -126,7 +126,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                   BC[w] += delta[w];
               }
           }
-          free(delta);
       }
       free(stack);
       free(queue);
@@ -135,6 +134,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       free(dist);
       free(pListMem);
       free(in_degree);
+      free(delta);
   }
   elapsed_time = get_seconds() - elapsed_time;
   return elapsed_time;
