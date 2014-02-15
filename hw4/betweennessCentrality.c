@@ -49,7 +49,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       double *sigma = (double *) calloc(n, sizeof(double));
       // Dist is the distance of each node from starting
       int *dist = (int *) malloc(n*sizeof(int));
-      
+      printf("1");
       for (s = i*chunkSize; s < (i*chunkSize + chunkSize); s++)
       {
           // Fresh starting vertex so reset stack and queue
@@ -71,6 +71,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           // Enqueue ourself
           queue[endOfQueue] = s;
           endOfQueue = (endOfQueue + 1) % n;
+          printf("2");
           while (endOfQueue != frontOfQueue)
           {
               // Dequeue v from queue
@@ -81,6 +82,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
               topOfStack++;
               // For every neighbor of v
               int j;
+              printf("3");
               for ( j=G->firstnbr[v]; j<G->firstnbr[v+1]; j++ )
               {
                   // w is the neighbor
@@ -104,6 +106,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           }
           // Set all deltas to zero
           double *delta = (double *) calloc(n, sizeof(double));
+          printf("4");
           while (topOfStack > -1)
           {
               // Pop w from stack
@@ -122,6 +125,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                   BC[w] += delta[w];
               }
           }
+          printf("5");
           free(delta);
       }
       free(stack);
