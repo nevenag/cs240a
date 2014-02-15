@@ -11,17 +11,12 @@ double betweennessCentrality_parallel(graph* G, double* BC)
   int n = G->nv;
   int m = G->ne;
   int p = 10;
-  int chunkSize = n/p;
-  int leftover = n%p;
+  int chunkSize = n / p;
+  int leftover = n % p;
   /* Start timing code from here */
   elapsed_time = get_seconds();
   cilk_for (i = 0; i < p; i++)
   {
-      // Last processor gets leftover nodes
-      if (i == p-1)
-      {
-          chunkSize += leftover;
-      }
       // Holds current vertex number
       int s;
       // Stack of explored vertices
@@ -50,7 +45,13 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       // Dist is the distance of each node from starting
       int *dist = (int *) malloc(n*sizeof(int));
       printf("1");
-      for (s = i*chunkSize; s < (i*chunkSize + chunkSize); s++)
+      int mySize = chunkSize;
+      // Last processor gets leftover nodes
+      if (i == p-1)
+      {
+          mySize += leftover;
+      }
+      for (s = i*chunkSize; s < (i*chunkSize + mySize); s++)
       {
           // Fresh starting vertex so reset stack and queue
           int topOfStack = 0;
