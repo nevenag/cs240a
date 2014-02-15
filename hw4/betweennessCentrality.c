@@ -27,10 +27,13 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       int *in_degree = (int *) calloc(n+1, sizeof(int));
       int *numEdges = (int *) malloc((n+1)*sizeof(int));
       int index;
-      for (index = 0; index < m; index++) {
+      printf("Hasn't segfaulted yet\n");
+      for (index = 0; index < m; index++)
+      {
         int vertex = G->nbr[index];
         in_degree[vertex]++;
       }
+      printf("Has it segfaulted yet?\n");
       prefix_sums(in_degree, numEdges, n);
       int *pListMem = (int *) malloc(m*sizeof(int));
       for (index = 0; index < n; index++)
@@ -72,7 +75,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           // Enqueue ourself
           queue[endOfQueue] = s;
           endOfQueue = (endOfQueue + 1) % n;
-          printf("2");
           while (endOfQueue != frontOfQueue)
           {
               // Dequeue v from queue
@@ -83,7 +85,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
               topOfStack++;
               // For every neighbor of v
               int j;
-              printf("3");
               for ( j=G->firstnbr[v]; j<G->firstnbr[v+1]; j++ )
               {
                   // w is the neighbor
@@ -107,7 +108,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           }
           // Set all deltas to zero
           double *delta = (double *) calloc(n, sizeof(double));
-          printf("4");
           while (topOfStack > -1)
           {
               // Pop w from stack
@@ -126,7 +126,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                   BC[w] += delta[w];
               }
           }
-          printf("5");
           free(delta);
       }
       free(stack);
