@@ -109,28 +109,23 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           }
           // Set all deltas to zero
           double *delta = (double *) calloc(n, sizeof(double));
-          printf("Summing up deltas now. ToS is %d\n",topOfStack);
           while (topOfStack > 0)
           {
               // Pop w from stack
               int w = stack[--topOfStack];
-              printf("Just popped %d from stack. ToS is now %d\n",w,topOfStack);
               // Loop through every predecessor of w
               for (index = 0; index < P[w].count; index++)
               {
                   // v is a predecessor of w
                   int v = P[w].list[index];
                   delta[v] = delta[v] + (sigma[v] / sigma[w])*(1 + delta[w]);
-		  printf("delta[%d] = %f\n",v,delta[v]);
               }
               // If this isnt the starting vertex, then update BC score
               if (w != s)
               {
                   BC[w] += delta[w];
-		  printf("%d is not equal to %d\ndelta[%d] = %f\n",w,s,w,delta[w]);
               }
           }
-	  printf("Done summing up deltas now. ToS is %d\n",topOfStack);
           free(delta);
       }
       free(stack);
