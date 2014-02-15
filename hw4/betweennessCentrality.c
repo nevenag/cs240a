@@ -52,8 +52,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       {
           mySize += leftover;
       }
-      // Set all deltas to zero
-      double *delta = (double *) calloc(n, sizeof(double));
       // Main Loop
       for (s = i*chunkSize; s < (i*chunkSize + mySize); s++)
       {
@@ -82,7 +80,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
               int v = queue[frontOfQueue];
               frontOfQueue = (frontOfQueue + 1) % n;
               // Push v to stack
-              stack[topOfStack] = s;
+              stack[topOfStack] = v;
               topOfStack++;
               // For every neighbor of v
               int j;
@@ -107,25 +105,32 @@ double betweennessCentrality_parallel(graph* G, double* BC)
                   }
               }
           }
-          
+          // Set all deltas to zero
+          double *delta = (double *) calloc(n, sizeof(double));
+          printf("Summing up deltas now. ToS is %d\n",topOfStack);
           while (topOfStack > -1)
           {
               // Pop w from stack
               int w = stack[topOfStack];
               topOfStack--;
+              printf("Just popped %d from stack. ToS is now %d\n",w,topOfStack);
               // Loop through every predecessor of w
               for (index = 0; index < P[w].count; index++)
               {
                   // v is a predecessor of w
                   int v = P[w].list[index];
                   delta[v] = delta[v] + (sigma[v] / sigma[w])*(1 + delta[w]);
+		  printf("delta[%d] = %f\n",v,delta[v]);
               }
               // If this isnt the starting vertex, then update BC score
               if (w != s)
               {
                   BC[w] += delta[w];
+		  printf("%d is not equal to %d\ndelta[%d] = %f\n",w,s,w,delta[w]);
               }
           }
+	  printf("Done summing up deltas now. ToS is %d\n",topOfStack);
+          free(delta);
       }
       free(stack);
       free(queue);
@@ -134,7 +139,6 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       free(dist);
       free(pListMem);
       free(in_degree);
-      free(delta);
   }
   elapsed_time = get_seconds() - elapsed_time;
   return elapsed_time;
