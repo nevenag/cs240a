@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     elapsed_time = betweennessCentrality_parallel(G, BC);
   }
   fprintf(stderr, "Time for betweenness centrality is %9.6f sec.\n", elapsed_time);
-  fprintf(stderr, "TEPS score is %4.3e\n\n", G->nv * (G->ne) / elapsed_time );
+  fprintf(stderr, "TEPS score is %4.3e\n\n", (double)G->nv * (G->ne) / elapsed_time );
 	
   /* ------------------------------------------------------------- */
   /* Validation: Check the answer if graph is a power-of-two torus */
