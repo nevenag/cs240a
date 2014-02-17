@@ -71,7 +71,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       // Main Loop
       for (s = i*chunkSize; s < (i*chunkSize + mySize); s++)
       {
-          if (++numTraversals > numv)
+          if (++numTraversals > numV)
               break;
           // Fresh starting vertex so reset stack and queue
           int topOfStack = 0;
