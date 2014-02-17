@@ -4,15 +4,28 @@
 
 #define MAX_THREADS 320
 
+typedef struct
+{
+    double *values;
+} parallelBCValues;
+
 double betweennessCentrality_parallel(graph* G, double* BC)
 {
   double elapsed_time;
   int i;
+  // Get number of vertices and edges
   int n = G->nv;
   int m = G->ne;
+  // Magic number to determine chunk sizes
   int p = 10;
   int chunkSize = n / p;
   int leftover = n % p;
+  // Allocate and initialize the parallel BC structure array
+  parallelBCValues *parallelBC = (parallelBCValues *) calloc(n, sizeof(parallelBCValues));
+  for (i = 0; i < n; i++)
+  {
+      parallelBC[i].values = (double *) calloc(p, sizeof(double));
+  }
   /* Start timing code from here */
   elapsed_time = get_seconds();
   cilk_for (i = 0; i < p; i++)
@@ -123,7 +136,9 @@ double betweennessCentrality_parallel(graph* G, double* BC)
               // If this isnt the starting vertex, then update BC score
               if (w != s)
               {
-                  BC[w] += delta[w];
+                  // Add to this processors copy of BC[w]
+                  parallelBC[w].values[i] += delta[w];
+                  // BC[w] += delta[w];
               }
           }
           free(delta);
@@ -136,6 +151,17 @@ double betweennessCentrality_parallel(graph* G, double* BC)
       free(pListMem);
       free(in_degree);
   }
+  // Sum up BC scores in parallel
+  cilk_for (i = 0; i < n; i++)
+  {
+      int k;
+      for (k = 0; k < p; k++)
+      {
+          BC[i] += parallelBC[i].values[k];
+      }
+      free(parallelBC[i].values);
+  }
+  free(parallelBC);
   elapsed_time = get_seconds() - elapsed_time;
   return elapsed_time;
 }
