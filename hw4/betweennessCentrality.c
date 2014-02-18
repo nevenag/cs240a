@@ -29,7 +29,7 @@ double betweennessCentrality_parallel(graph* G, double* BC)
   /* Start timing code from here */
   elapsed_time = get_seconds();
   cilk_for (i = 0; i < p; i++)
-  {
+  {   
       // Holds current vertex number
       int s;
       // Stack of explored vertices
@@ -66,13 +66,13 @@ double betweennessCentrality_parallel(graph* G, double* BC)
           mySize += leftover;
       }
       //
-      // int numV = 100;
-      // int numTraversals = 0;
+      int numV = 100;
+      int numTraversals = 0;
       // Main Loop
       for (s = i*chunkSize; s < (i*chunkSize + mySize); s++)
       {
-          // if (++numTraversals > numV)
-          //     break;
+          if (++numTraversals > numV)
+	      break;
           // Fresh starting vertex so reset stack and queue
           int topOfStack = 0;
           int frontOfQueue = 0;
