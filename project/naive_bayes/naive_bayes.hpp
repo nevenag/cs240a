@@ -7,7 +7,7 @@ class NaiveBayesClassifier
 {
   public:
     NaiveBayesClassifier(char*);
-    
+    void printAllClassNames();
   private:
     // Private members
     std::string *classNames;

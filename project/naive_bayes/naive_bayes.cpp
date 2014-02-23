@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <cstdlib>
 
 #include "naive_bayes.hpp"
 
@@ -36,4 +37,13 @@ void NaiveBayesClassifier::readInputClasses(char *fileName)
     // All done
     inputFile.close();
     return;
+}
+
+void NaiveBayesClassifier::printAllClassNames()
+{
+    cout << "All valid class names are as follows (" << classCount << " total):" << endl;
+    for (int i = 0; i < classCount; i++)
+    {
+        cout << "\t" << classNames[i] << endl;
+    }
 }
