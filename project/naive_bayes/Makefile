@@ -1,4 +1,4 @@
-CC = gcc
+CC = g++
 CFLAGS = 
 OBJECTS = main.o naive_bayes.o
 EXECUTABLE = naivebayes
