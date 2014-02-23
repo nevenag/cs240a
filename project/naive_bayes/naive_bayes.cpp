@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <string>
 
 #include "naive_bayes.hpp"
 
