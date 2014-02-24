@@ -8,7 +8,8 @@ int main()
 {
   cout << "Main" << endl;
   
-  NaiveBayesClassifier nbClassifier("all-topics-strings.lc.txt");
+  char classNamesFile[] = "all-topics-strings.lc.txt";
+  NaiveBayesClassifier nbClassifier(classNamesFile);
   nbClassifier.printAllClassNames();
   
   return 0;

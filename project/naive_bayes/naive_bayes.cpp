@@ -8,12 +8,16 @@
 
 using namespace std;
 
+// Constructors
+
 NaiveBayesClassifier::NaiveBayesClassifier (char *classFileName)
 {
     classCount = 0;
     classNames = new string[MAX_NUM_CLASSES];
     readInputClasses(classFileName);
 }
+
+// Constructor Helpers
 
 void NaiveBayesClassifier::readInputClasses(char *fileName)
 {
@@ -39,6 +43,29 @@ void NaiveBayesClassifier::readInputClasses(char *fileName)
     return;
 }
 
+// Learning Methods
+
+void NaiveBayesClassifier::learnFromTrainingSet(char **documentFileNames)
+{
+    
+}
+/*
+    Compute all P(C_j) terms
+*/
+void NaiveBayesClassifier::computeClassPriors()
+{
+    
+}
+/*
+    Compute all P(w_i | C_j) terms
+*/
+void NaiveBayesClassifier::computeWordLikelihoods()
+{
+    
+}
+
+// Public Utility Methods
+
 void NaiveBayesClassifier::printAllClassNames()
 {
     cout << "All valid class names are as follows (" << classCount << " total):" << endl;
@@ -47,3 +74,4 @@ void NaiveBayesClassifier::printAllClassNames()
         cout << "\t" << classNames[i] << endl;
     }
 }
+
