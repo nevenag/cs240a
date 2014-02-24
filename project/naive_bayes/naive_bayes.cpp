@@ -2,8 +2,10 @@
 #include <iostream>
 #include <cstdlib>
 #include <vector>
-
+#include <map>
 #include "naive_bayes.hpp"
+#include <regex>
+#include <string>
 
 #define MAX_NUM_CATEGORIES 200
 
@@ -81,9 +83,64 @@ void NaiveBayesClassifier::readInputVocabulary(char *fileName, string *categoryN
 
 // Learning Methods
 
-void NaiveBayesClassifier::learnFromTrainingSet(char **documentFileNames)
+void NaiveBayesClassifier::learnFromTrainingSet()
 {
+    int globalLineCount = 0;
+    // for all categories 
+    //CategoryProbabilities **categoryProbabilities;
+    for (int i = 0; i < categoryCount; i++)
+    {
+	// get category name
+	string categoryFileName = categoryProbabilities[i]->getCategoryName();
+	// read category file
+	ifstream inputFile (categoryFileName);
+	// create category map for words
+	std::map<string, int> wordCounts;
+	double fullCount = 0;
+	// wanna be P(C)
+	int linecount = 0;
+	// Check for success
+	if (!inputFile)
+	{
+	    // Cant do anything if we dont have class names...
+	    cout << "Unable to open class names file: " << categoryFileName << endl;
+	    exit(-1);
+	}
+	// While there's still stuff left to read...
+	while (inputFile)
+	{
+	    // Read one line at a time
+	    string line;
+	    string word;
+	    getline(inputFile, line);
+	    // read word by word
+	    std::istringstream iss(line);
+	    // for each word update vector vocabular per category
+	    while (std::getline(iss, word, ' '))
+	    {
+		// if we have the word, increment the count
+		if(wordCounts.count(word) == 1)
+		{
+		    wordCounts[word] = wordCounts[word] + 1;
+		}  
+		else //if it's not in the map yet add it
+		{
+		  // TODO check this -- wordCounts[word] = 1;
+		  wordCounts.insert(std::pair<string,int>(word,1));
+		}
+		fullCount += 1;
+	    }
+	    linecount++;
+	    
+	}
+	// add category 
+	categoryProbabilities[i]->setProbabilitiesWithCounts(map,fullCount);    
+	// and close the file
+	inputFile.close();
+	globalLineCount += linecount;
+    }
     
+    return;
 }
 /*
     Compute all P(C_j) terms
