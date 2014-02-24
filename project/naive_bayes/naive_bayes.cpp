@@ -2,10 +2,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <vector>
-#include <map>
+#include <sstream>
 #include "naive_bayes.hpp"
-#include <regex>
-#include <string>
 
 #define MAX_NUM_CATEGORIES 200
 
@@ -114,9 +112,9 @@ void NaiveBayesClassifier::learnFromTrainingSet()
 	    string word;
 	    getline(inputFile, line);
 	    // read word by word
-	    std::istringstream iss(line);
+	    istringstream iss(line);
 	    // for each word update vector vocabular per category
-	    while (std::getline(iss, word, ' '))
+	    while (getline(iss, word, ' '))
 	    {
 		// if we have the word, increment the count
 		if(wordCounts.count(word) == 1)
