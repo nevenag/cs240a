@@ -8,7 +8,10 @@ class CategoryProbabilities
 {
   public:
     CategoryProbabilities(std::string,std::string*,int);
+    CategoryProbabilities(std::string);
     std::string getCategoryName() { return categoryName; };
+    void setProbabilitiesWithCounts(std::unordered_map <std::string, int>,double);
+    void updateCountForWord(std::string);
   private:
     // Private Members
     std::string categoryName;

@@ -8,7 +8,7 @@
 class NaiveBayesClassifier
 {
   public:
-    NaiveBayesClassifier(char*,char*);
+    NaiveBayesClassifier(char* /*,char* */);
     void printAllCategoryNames();
     void learnFromTrainingSet(char**);
   private:

@@ -11,7 +11,7 @@ using namespace std;
 
 // Constructors
 
-NaiveBayesClassifier::NaiveBayesClassifier (char *categoryFileName, char *vocabularyFileName)
+NaiveBayesClassifier::NaiveBayesClassifier (char *categoryFileName/*, char *vocabularyFileName*/)
 {
     // First we need to get the names of all the categories
     categoryCount = 0;
@@ -19,10 +19,37 @@ NaiveBayesClassifier::NaiveBayesClassifier (char *categoryFileName, char *vocabu
     readInputCategories(categoryFileName, categoryNames);
     // Then we can get the vocabulary and create the CategoryProbabilities objects
     categoryProbabilities = new CategoryProbabilities*[categoryCount];
-    readInputVocabulary(vocabularyFileName, categoryNames);
+    // Now create the CategoryProbabilities objects
+    for (int i = 0; i < categoryCount; i++)
+        categoryProbabilities[i] = new CategoryProbabilities(categoryNames[i]);
+    // readInputVocabulary(vocabularyFileName, categoryNames);
 }
 
 // Constructor Helpers
+
+void NaiveBayesClassifier::readInputCategories(char *fileName, string *categoryNames)
+{
+    // Open the input file for reading
+    ifstream inputFile (fileName);
+    // Check for success
+    if (!inputFile)
+    {
+        // Cant do anything if we dont have class names...
+        cout << "Unable to open class names file: " << fileName << endl;
+        exit(-1);
+    }
+    // While there's still stuff left to read...
+    while (inputFile)
+    {
+        // Read one line at a time
+        string line;
+        getline(inputFile, line);
+        categoryNames[categoryCount++] = line;
+    }
+    // All done
+    inputFile.close();
+    return;
+}
 
 void NaiveBayesClassifier::readInputVocabulary(char *fileName, string *categoryNames)
 {
@@ -49,30 +76,6 @@ void NaiveBayesClassifier::readInputVocabulary(char *fileName, string *categoryN
     // Now create the CategoryProbabilities objects
     for (int i = 0; i < categoryCount; i++)
         categoryProbabilities[i] = new CategoryProbabilities(categoryNames[i], &vocabVector[0], vocabVector.size());
-    return;
-}
-
-void NaiveBayesClassifier::readInputCategories(char *fileName, string *categoryNames)
-{
-    // Open the input file for reading
-    ifstream inputFile (fileName);
-    // Check for success
-    if (!inputFile)
-    {
-        // Cant do anything if we dont have class names...
-        cout << "Unable to open class names file: " << fileName << endl;
-        exit(-1);
-    }
-    // While there's still stuff left to read...
-    while (inputFile)
-    {
-        // Read one line at a time
-        string line;
-        getline(inputFile, line);
-        categoryNames[categoryCount++] = line;
-    }
-    // All done
-    inputFile.close();
     return;
 }
 
