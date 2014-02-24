@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = 
-OBJECTS = main.o naive_bayes.o
+OBJECTS = main.o naive_bayes.o category_probabilities.o
 EXECUTABLE = naivebayes
 
 all: $(EXECUTABLE)

@@ -10,14 +10,39 @@ using namespace std;
 
 // Constructors
 
-NaiveBayesClassifier::NaiveBayesClassifier (char *categoryFileName)
+NaiveBayesClassifier::NaiveBayesClassifier (char *vocabularyFileName, char *categoryFileName)
 {
+    readInputVocabulary(vocabularyFileName);
     categoryCount = 0;
-    categoryNames = new string[MAX_NUM_CATEGORIES];
+    categoryProbabilities = new CategoryProbabilities[MAX_NUM_CATEGORIES];
     readInputCategories(categoryFileName);
 }
 
 // Constructor Helpers
+
+void NaiveBayesClassifier::readInputVocabulary(char *fileName)
+{
+    // Open the input file for reading
+    ifstream inputFile (fileName);
+    // Check for success
+    if (!inputFile)
+    {
+        // Cant do anything if we dont have vocabulary...
+        cout << "Unable to open vocabulary file: " << fileName << endl;
+        exit(-1);
+    }
+    // While there's still stuff left to read...
+    while (inputFile)
+    {
+        // Read one line at a time
+        string line;
+        getline(inputFile, line);
+        
+    }
+    // All done
+    inputFile.close();
+    return;
+}
 
 void NaiveBayesClassifier::readInputCategories(char *fileName)
 {
@@ -36,7 +61,8 @@ void NaiveBayesClassifier::readInputCategories(char *fileName)
         // Read one line at a time
         string line;
         getline(inputFile, line);
-        categoryNames[categoryCount++] = line;
+        categoryProbabilities[categoryCount++] = CategoryProbabilities(line.c_str());
+        // categoryNames[categoryCount++] = line;
     }
     // All done
     inputFile.close();

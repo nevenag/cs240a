@@ -3,17 +3,21 @@
 
 #include <string>
 
+#include "category_probabilities.hpp"
+
 class NaiveBayesClassifier
 {
   public:
-    NaiveBayesClassifier(char*);
+    NaiveBayesClassifier(char*,char*);
     void printAllCategoryNames();
     void learnFromTrainingSet(char**);
   private:
     // Private members
-    std::string *categoryNames;
+    CategoryProbabilities *categoryProbabilities;
+    // std::string *categoryNames;
     int categoryCount;
     // Private methods
+    void readInputVocabulary(char*);
     void readInputCategories(char*);
     void computeCategoryPriors();
     void computeWordLikelihoods();
