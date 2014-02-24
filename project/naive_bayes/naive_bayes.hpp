@@ -2,7 +2,7 @@
 #define _NAIVE_BAYES_HPP
 
 #include <string>
-
+#include <unordered_map>
 #include "category_probabilities.hpp"
 
 class NaiveBayesClassifier
@@ -10,7 +10,7 @@ class NaiveBayesClassifier
   public:
     NaiveBayesClassifier(char* /*,char* */);
     void printAllCategoryNames();
-    void learnFromTrainingSet(char**);
+    void learnFromTrainingSet();
   private:
     // Private members
     CategoryProbabilities **categoryProbabilities;

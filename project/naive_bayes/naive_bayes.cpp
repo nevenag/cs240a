@@ -95,7 +95,7 @@ void NaiveBayesClassifier::learnFromTrainingSet()
 	// read category file
 	ifstream inputFile (categoryFileName);
 	// create category map for words
-	std::map<string, int> wordCounts;
+	unordered_map <string, int> wordCounts;
 	double fullCount = 0;
 	// wanna be P(C)
 	int linecount = 0;
@@ -134,7 +134,7 @@ void NaiveBayesClassifier::learnFromTrainingSet()
 	    
 	}
 	// add category 
-	categoryProbabilities[i]->setProbabilitiesWithCounts(map,fullCount);    
+	categoryProbabilities[i]->setProbabilitiesWithCounts(wordCounts,fullCount);    
 	// and close the file
 	inputFile.close();
 	globalLineCount += linecount;
