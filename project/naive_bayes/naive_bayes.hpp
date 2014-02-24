@@ -7,15 +7,15 @@ class NaiveBayesClassifier
 {
   public:
     NaiveBayesClassifier(char*);
-    void printAllClassNames();
+    void printAllCategoryNames();
     void learnFromTrainingSet(char**);
   private:
     // Private members
-    std::string *classNames;
-    int classCount;
+    std::string *categoryNames;
+    int categoryCount;
     // Private methods
-    void readInputClasses(char*);
-    void computeClassPriors();
+    void readInputCategories(char*);
+    void computeCategoryPriors();
     void computeWordLikelihoods();
 };
 

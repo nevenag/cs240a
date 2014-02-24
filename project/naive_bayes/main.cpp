@@ -8,9 +8,9 @@ int main()
 {
   cout << "Main" << endl;
   
-  char classNamesFile[] = "all-topics-strings.lc.txt";
-  NaiveBayesClassifier nbClassifier(classNamesFile);
-  nbClassifier.printAllClassNames();
+  char categoryNamesFile[] = "all-topics-strings.lc.txt";
+  NaiveBayesClassifier nbClassifier(categoryNamesFile);
+  nbClassifier.printAllCategoryNames();
   
   return 0;
 }
