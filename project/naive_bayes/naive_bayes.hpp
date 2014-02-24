@@ -13,12 +13,12 @@ class NaiveBayesClassifier
     void learnFromTrainingSet(char**);
   private:
     // Private members
-    CategoryProbabilities *categoryProbabilities;
+    CategoryProbabilities **categoryProbabilities;
     // std::string *categoryNames;
     int categoryCount;
     // Private methods
-    void readInputVocabulary(char*);
-    void readInputCategories(char*);
+    void readInputCategories(char*,std::string*);
+    void readInputVocabulary(char*,std::string*);
     void computeCategoryPriors();
     void computeWordLikelihoods();
 };

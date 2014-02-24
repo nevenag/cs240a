@@ -7,7 +7,8 @@
 class CategoryProbabilities
 {
   public:
-    CategoryProbabilities(const char*,std::string*,int);
+    CategoryProbabilities(std::string,std::string*,int);
+    std::string getCategoryName() { return categoryName; };
   private:
     // Private Members
     std::string categoryName;
