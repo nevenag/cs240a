@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = 
+CFLAGS = -std=c++0x
 OBJECTS = main.o naive_bayes.o category_probabilities.o
 EXECUTABLE = naivebayes
 
