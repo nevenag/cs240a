@@ -7,6 +7,8 @@
 
 #define MAX_NUM_CATEGORIES 200
 
+//#define DEBUG_1
+
 using namespace std;
 
 // Constructors
@@ -44,7 +46,8 @@ void NaiveBayesClassifier::readInputCategories(char *fileName, string *categoryN
         // Read one line at a time
         string line;
         getline(inputFile, line);
-        categoryNames[categoryCount++] = line;
+        if (line != "")
+            categoryNames[categoryCount++] = line;
     }
     // All done
     inputFile.close();
@@ -95,12 +98,12 @@ void NaiveBayesClassifier::learnFromTrainingSet()
     	unordered_map <string, int> wordCounts;
     	double fullCount = 0;
     	// wanna be P(C)
-    	int linecount = 0;
+    	int lineCount = 0;
     	// Check for success
     	if (!inputFile)
     	{
-    	    // Cant do anything if we dont have class names...
-    	    cout << "Unable to open class names file: " << categoryFileName << endl;
+    	    // Cant do anything if we dont have the mega document...
+    	    cout << "Unable to open training document file: " << categoryFileName << endl;
     	    exit(-1);
     	}
     	// While there's still stuff left to read...
@@ -115,43 +118,112 @@ void NaiveBayesClassifier::learnFromTrainingSet()
     	    // for each word update vector vocabular per category
     	    while (getline(iss, word, ' '))
     	    {
-    		// if we have the word, increment the count
-    		if(wordCounts.count(word) == 1)
-    		{
-    		    wordCounts[word] = wordCounts[word] + 1;
-    		}  
-    		else //if it's not in the map yet add it
-    		{
-    		  // TODO check this -- wordCounts[word] = 1;
-    		  wordCounts.insert(std::pair<string,int>(word,1));
-    		}
-    		fullCount += 1;
+        		// if we have the word, increment the count
+        		if(wordCounts.count(word) == 1)
+        		{
+        		    wordCounts[word]++;// = wordCounts[word] + 1;
+        		}  
+        		else //if it's not in the map yet add it
+        		{
+        		  //TODO: check this
+                  wordCounts[word] = 1;
+        		  //wordCounts.insert(pair<string,int>(word,1));
+        		}
+        		fullCount++;
     	    }
-    	    linecount++;
+    	    lineCount++;
 	    
     	}
     	// add category 
-    	categoryProbabilities[i]->setProbabilitiesWithCounts(wordCounts,fullCount);    
+    	categoryProbabilities[i]->setProbabilitiesWithCounts(wordCounts, fullCount, lineCount);    
     	// and close the file
     	inputFile.close();
-    	globalLineCount += linecount;
+    	globalLineCount += lineCount;
     }
-    
+    for (int i = 0; i < categoryCount; i++)
+    {
+        categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalLineCount);
+    }
     return;
 }
-/*
-    Compute all P(C_j) terms
-*/
-void NaiveBayesClassifier::computeCategoryPriors()
+
+// Document Classification
+
+void NaiveBayesClassifier::classifyDocument(char *documentFileName)
 {
-    
-}
-/*
-    Compute all P(w_i | C_j) terms
-*/
-void NaiveBayesClassifier::computeWordLikelihoods()
-{
-    
+	// Open document file
+	ifstream inputFile (documentFileName);
+	// Check for success
+	if (!inputFile)
+	{
+	    // Cant do anything if we dont have class names...
+	    cout << "Unable to open document file: " << documentFileName << endl;
+	    exit(-1);
+	}
+    // Ok so now we have an open file that represents the document we want to classify
+    // We need to be able to store the P(C_j|d) terms for each C_j, initialized to
+    // the prior probability, i.e. P(C_j)
+    double *classificationProbabilities = new double[categoryCount];
+    double sum = 0.0;
+    for (int i = 0; i < categoryCount; i++)
+    {
+        classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
+        sum += classificationProbabilities[i];
+    }
+#ifdef DEBUG_1
+    int *probabilityIsZero = new int[categoryCount]();
+#endif
+	// While there's still stuff left to read...
+	while (inputFile)
+	{
+	    // Read one line at a time
+	    string line;
+        getline(inputFile, line);
+	    // Read each line word by word
+	    istringstream iss(line);
+        string word;
+	    while (getline(iss, word, ' '))
+	    {
+            // Need to figure out P(w_i|C_j) for each C_j
+            // where word == w_i
+            for (int i = 0; i < categoryCount; i++)
+            {
+                classificationProbabilities[i] *= categoryProbabilities[i]->getProbabilityOfWord(word);
+#ifdef DEBUG_1
+                if (categoryProbabilities[i]->getProbabilityOfWord(word) == 0.0)
+                {
+                    cout << "Probability of word '" << word << "' for category '" << categoryProbabilities[i]->getCategoryName() << "' is zero" << endl;
+                }
+                if (classificationProbabilities[i] == 0.0 && probabilityIsZero[i] == 0)
+                {
+                    cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "' became zero with word '" << word << "' which had probability: " << categoryProbabilities[i]->getProbabilityOfWord(word) << endl;
+                    probabilityIsZero[i] = 1;
+                }
+#endif
+            }
+        }
+    }
+    // Done with the document file now
+    inputFile.close();
+    // Need to find the max
+    double maximum = 0.0;
+    int index = -1;
+    for (int i = 0; i < categoryCount; i++)
+    {
+#ifdef DEBUG_1
+        cout << "Is " << classificationProbabilities[i] << " greater than zero?" << endl;
+#endif
+        if (classificationProbabilities[i] > maximum)
+        {
+            maximum = classificationProbabilities[i];
+            index = i;
+        }
+    }
+#ifdef DEBUG_1
+    cout << "Index: " << index << endl;
+#endif
+    cout << "The document specified by " << documentFileName << " belongs to the " << categoryProbabilities[index]->getCategoryName() << " category." << endl;
+    delete [] classificationProbabilities;
 }
 
 // Public Utility Methods

@@ -12,6 +12,9 @@ int main()
   // char vocabularyFile[] = "all-topics-strings.lc.txt";
   NaiveBayesClassifier nbClassifier(categoryNamesFile/*, vocabularyFile*/);
   nbClassifier.printAllCategoryNames();
+  nbClassifier.learnFromTrainingSet();
+  char documentToClassify[] = "categorize.me";
+  nbClassifier.classifyDocument(documentToClassify);
   
   return 0;
 }
