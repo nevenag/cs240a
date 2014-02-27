@@ -7,7 +7,7 @@
 
 #define MAX_NUM_CATEGORIES 200
 
-//#define DEBUG_1
+// #define DEBUG_1
 
 using namespace std;
 
@@ -188,7 +188,7 @@ void NaiveBayesClassifier::classifyDocument(char *documentFileName)
             // where word == w_i
             for (int i = 0; i < categoryCount; i++)
             {
-                classificationProbabilities[i] *= categoryProbabilities[i]->getProbabilityOfWord(word);
+                classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
 #ifdef DEBUG_1
                 if (categoryProbabilities[i]->getProbabilityOfWord(word) == 0.0)
                 {
@@ -206,8 +206,8 @@ void NaiveBayesClassifier::classifyDocument(char *documentFileName)
     // Done with the document file now
     inputFile.close();
     // Need to find the max
-    double maximum = 0.0;
-    int index = -1;
+    double maximum = classificationProbabilities[0];
+    int index = 0;
     for (int i = 0; i < categoryCount; i++)
     {
 #ifdef DEBUG_1

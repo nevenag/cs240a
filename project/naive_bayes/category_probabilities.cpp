@@ -43,7 +43,7 @@ double CategoryProbabilities::getProbabilityOfWord(string word)
 
 void CategoryProbabilities::setPriorProbabilityWithTotalDocCount(int totalDocCount)
 {
-    categoryPriorProbability = SCALING_FACTOR * ((double)docCount / totalDocCount);
+    categoryPriorProbability = log(((double)docCount / totalDocCount));
 }
 
 void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, int> wordCounts, double totalWordCount, int docCount)
@@ -54,10 +54,10 @@ void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, in
     for (auto wordCountPair : wordCounts)
     {
         // add-one smoothing
-        wordLikelihoodProbabilities[wordCountPair.first] = SCALING_FACTOR * ( (wordCountPair.second + ALPHA) / (totalWordCount + ALPHA*vocabSize) );
+        wordLikelihoodProbabilities[wordCountPair.first] = log(( (wordCountPair.second + ALPHA) / (totalWordCount + ALPHA*vocabSize) ));
     }
     // Unknown words have a fixed probability according to add-alpha smoothing
-    unknownWordProbability = SCALING_FACTOR * (ALPHA / (totalWordCount + ALPHA*vocabSize));
+    unknownWordProbability = log((ALPHA / (totalWordCount + ALPHA*vocabSize)));
 }
 
 void CategoryProbabilities::updateCountForWord(string word)
