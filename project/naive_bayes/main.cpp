@@ -9,7 +9,7 @@ int main()
 {
   cout << "Main" << endl;
   // Initialize the NB Classifier
-  char categoryNamesFile[] = "category_names.txt";
+  char categoryNamesFile[] = "./20news/category_names.txt";
   NaiveBayesClassifier nbClassifier(categoryNamesFile);
   nbClassifier.printAllCategoryNames();
   // How long does the training phase take?

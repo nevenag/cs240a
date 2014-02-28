@@ -37,7 +37,7 @@ void NaiveBayesClassifier::readInputCategories(char *fileName, string *categoryN
     if (!inputFile)
     {
         // Cant do anything if we dont have class names...
-        cout << "Unable to open class names file: " << fileName << endl;
+        cout << "readInputCategories::Unable to open class names file: " << fileName << endl;
         exit(-1);
     }
     // While there's still stuff left to read...
@@ -62,7 +62,7 @@ void NaiveBayesClassifier::readInputVocabulary(char *fileName, string *categoryN
     if (!inputFile)
     {
         // Cant do anything if we dont have vocabulary...
-        cout << "Unable to open vocabulary file: " << fileName << endl;
+        cout << "readInputVocabulary::Unable to open vocabulary file: " << fileName << endl;
         exit(-1);
     }
     vector<string> vocabVector;
@@ -92,6 +92,8 @@ void NaiveBayesClassifier::learnFromTrainingSet()
     {
     	// get category name
     	string categoryFileName = categoryProbabilities[i]->getCategoryName();
+	// TODO adjust this not to depend on the dataset used:
+	categoryFileName = "./20news/train/" + categoryFileName;
     	// read category file
     	ifstream inputFile (categoryFileName);
     	// create category map for words
@@ -103,7 +105,7 @@ void NaiveBayesClassifier::learnFromTrainingSet()
     	if (!inputFile)
     	{
     	    // Cant do anything if we dont have the mega document...
-    	    cout << "Unable to open training document file: " << categoryFileName << endl;
+    	    cout << "learnFromTrainingSet::Unable to open training document file: " << categoryFileName << endl;
     	    exit(-1);
     	}
     	// While there's still stuff left to read...
@@ -157,7 +159,7 @@ void NaiveBayesClassifier::classifyDocument(char *documentFileName)
 	if (!inputFile)
 	{
 	    // Cant do anything if we dont have class names...
-	    cout << "Unable to open document file: " << documentFileName << endl;
+	    cout << "classifyDocument::Unable to open document file: " << documentFileName << endl;
 	    exit(-1);
 	}
     // Ok so now we have an open file that represents the document we want to classify
