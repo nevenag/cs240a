@@ -8,17 +8,17 @@
 class NaiveBayesClassifier
 {
   public:
-    NaiveBayesClassifier(char* /*,char* */);
+    NaiveBayesClassifier(std::string);
     void printAllCategoryNames();
-    void learnFromTrainingSet();
-    void classifyDocument(char*);
+    void learnFromTrainingSet(std::string);
+    void classifyDocument(std::string);
   private:
     // Private members
     int categoryCount;
     CategoryProbabilities **categoryProbabilities;
     // Private methods
-    void readInputCategories(char*,std::string*);
-    void readInputVocabulary(char*,std::string*);
+    void readInputCategories(std::string,std::string*);
+    void readInputVocabulary(std::string,std::string*);
 };
 
 #endif

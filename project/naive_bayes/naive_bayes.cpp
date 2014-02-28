@@ -13,11 +13,12 @@ using namespace std;
 
 // Constructors
 
-NaiveBayesClassifier::NaiveBayesClassifier (char *categoryFileName/*, char *vocabularyFileName*/)
+NaiveBayesClassifier::NaiveBayesClassifier (string categoryFileName)
 {
     // First we need to get the names of all the categories
     categoryCount = 0;
-    string categoryNames[MAX_NUM_CATEGORIES];
+    string* categoryNames;
+    categoryNames = new string[MAX_NUM_CATEGORIES];
     readInputCategories(categoryFileName, categoryNames);
     // Then we can get the vocabulary and create the CategoryProbabilities objects
     categoryProbabilities = new CategoryProbabilities*[categoryCount];
@@ -29,7 +30,7 @@ NaiveBayesClassifier::NaiveBayesClassifier (char *categoryFileName/*, char *voca
 
 // Constructor Helpers
 
-void NaiveBayesClassifier::readInputCategories(char *fileName, string *categoryNames)
+void NaiveBayesClassifier::readInputCategories(string fileName, string* categoryNames)
 {
     // Open the input file for reading
     ifstream inputFile (fileName);
@@ -54,7 +55,7 @@ void NaiveBayesClassifier::readInputCategories(char *fileName, string *categoryN
     return;
 }
 
-void NaiveBayesClassifier::readInputVocabulary(char *fileName, string *categoryNames)
+void NaiveBayesClassifier::readInputVocabulary(string fileName, string *categoryNames)
 {
     // Open the input file for reading
     ifstream inputFile (fileName);
@@ -84,7 +85,7 @@ void NaiveBayesClassifier::readInputVocabulary(char *fileName, string *categoryN
 
 // Learning Methods
 
-void NaiveBayesClassifier::learnFromTrainingSet()
+void NaiveBayesClassifier::learnFromTrainingSet(string datasetName)
 {
     int globalLineCount = 0;
     // for all categories 
@@ -92,8 +93,7 @@ void NaiveBayesClassifier::learnFromTrainingSet()
     {
     	// get category name
     	string categoryFileName = categoryProbabilities[i]->getCategoryName();
-	// TODO adjust this not to depend on the dataset used:
-	categoryFileName = "./20news/train/" + categoryFileName;
+	categoryFileName = datasetName +"train/" + categoryFileName;
     	// read category file
     	ifstream inputFile (categoryFileName);
     	// create category map for words
@@ -151,7 +151,7 @@ void NaiveBayesClassifier::learnFromTrainingSet()
 
 // Document Classification
 
-void NaiveBayesClassifier::classifyDocument(char *documentFileName)
+void NaiveBayesClassifier::classifyDocument(string documentFileName)
 {
 	// Open document file
 	ifstream inputFile (documentFileName);

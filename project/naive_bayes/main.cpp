@@ -7,18 +7,39 @@ using namespace std;
 
 int main()
 {
-  cout << "Main" << endl;
+  int datasetNumber;
+  string datasetName;
+  cout << "main::select dataset" << endl;
+  cout << "1 for 20news" << endl;
+  cout << "2 for reuters" << endl;
+  cout << "3 for enron" << endl;
+  cin >> datasetNumber;
+  switch(datasetNumber){
+    case 1:
+      datasetName = "./20news/";
+      break;
+    case 2:
+      datasetName = "";
+      break;
+    case 3:
+      datasetName = "";
+      break;
+    default:
+      cout << "main:: not able to select dataset" << endl;
+      break;
+  }
+  
   // Initialize the NB Classifier
-  char categoryNamesFile[] = "./20news/category_names.txt";
+  string categoryNamesFile = datasetName + "category_names.txt";
   NaiveBayesClassifier nbClassifier(categoryNamesFile);
   nbClassifier.printAllCategoryNames();
   // How long does the training phase take?
   clock_t start = clock();
-  nbClassifier.learnFromTrainingSet();
+  nbClassifier.learnFromTrainingSet(datasetName);
   clock_t runTime = clock() - start;
   cout << "Elapsed time for learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
   // How quickly can we categorize a single docuemnt?
-  char documentToClassify[] = "categorize.me";
+  string documentToClassify = "categorize.me";
   start = clock();
   nbClassifier.classifyDocument(documentToClassify);
   runTime = clock() - start;
