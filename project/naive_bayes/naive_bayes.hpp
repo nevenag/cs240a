@@ -8,14 +8,21 @@
 class NaiveBayesClassifier
 {
   public:
+    // Constructors
     NaiveBayesClassifier(std::string);
+    // Public Utility
     void printAllCategoryNames();
+    // Learning
     void learnFromTrainingSet(std::string,std::string);
     void learnFromTrainingSetParallel(std::string,std::string,int,int);
+    // Classification
     void classifyTestSet(std::string,std::string);
+    void classifyTestSetParallel(std::string,std::string);
     void classifyDocument(std::string);
+    // Getters
     CategoryProbabilities** getCategoryProbabilities() { return categoryProbabilities; };
     int getCategoryCount() { return categoryCount; };
+    int getCategoryNames(std::string*);
   private:
     // Private members
     int categoryCount;

@@ -433,6 +433,11 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparat
   }
 }
 
+void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, string docSeparator)
+{
+  
+}
+
 void NaiveBayesClassifier::classifyDocument(string documentFileName)
 {
 	// Open document file
@@ -521,3 +526,14 @@ void NaiveBayesClassifier::printAllCategoryNames()
     }
 }
 
+// Getters
+
+int NaiveBayesClassifier::getCategoryNames(string *categoryNames)
+{
+  categoryNames = new string[categoryCount];
+  for (int i = 0; i < categoryCount; i++)
+  {
+      categoryNames[i] = categoryProbabilities[i]->getCategoryName();
+  }
+  return categoryCount;
+}
