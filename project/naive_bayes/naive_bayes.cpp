@@ -1,9 +1,11 @@
+#include "mpi.h"
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <sstream>
-#include <regex>
+#include <cstring>
+#include <boost/regex.hpp>
 #include "naive_bayes.hpp"
 
 #define MAX_NUM_CATEGORIES 200
@@ -85,6 +87,95 @@ void NaiveBayesClassifier::readInputVocabulary(string fileName, string *category
     return;
 }
 
+// Internal Helpers for Parsing Dataset Info
+
+void getOpenAndCloseTags(string *openTag, string *closeTag, string docSeparator)
+{
+    string separatorText = docSeparator;
+    separatorText.erase(0, 1);
+    separatorText.erase(separatorText.end()-1);
+    // Create close tag
+    int buffSize = 4+separatorText.size();
+    char buff[buffSize];
+    sprintf(buff, "</%s>", separatorText.c_str());
+    (*closeTag) = buff;
+    // Create open tag
+    memset(buff, 0, buffSize);
+    sprintf(buff, "<%s", separatorText.c_str());
+    (*openTag) = buff;
+}
+
+// Private Helpers for Learning Methods
+
+int NaiveBayesClassifier::learnForCategory(string datasetName, string docSeparator, string openTag, string closeTag, int categoryIndex)
+{
+	// get category name
+	string categoryFileName = categoryProbabilities[categoryIndex]->getCategoryName();
+  categoryFileName = datasetName +"train/" + categoryFileName;
+	// read category file
+	ifstream inputFile (categoryFileName);
+	// create category map for words
+	unordered_map <string, int> wordCounts;
+	double totalWordCount = 0;
+	// wanna be P(C)
+	int docCount = 0;
+	// Check for success
+	if (!inputFile)
+	{
+    // Cant do anything if we dont have the mega document...
+    cout << "learnFromTrainingSet::Unable to open training document file: " << categoryFileName << endl;
+    exit(-1);
+	}
+	// While there's still stuff left to read...
+	while (inputFile)
+	{
+    // Read one line at a time
+    string line;
+    string word;
+    getline(inputFile, line);
+    if (docSeparator.compare("\n") == 0)
+    {
+      docCount++;
+    }
+    else if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
+    {
+      if (line.compare(0, openTag.size(), openTag) == 0)
+      {
+        // Just ignore the document dividers
+        continue;
+      }
+      else if (line.compare(closeTag) == 0)
+      {
+        // Update docCount for close tags
+        docCount++;
+        continue;
+      }
+    }
+    // read word by word
+    istringstream iss(line);
+    // for each word update vector vocabular per category
+    while (getline(iss, word, ' '))
+    {
+  		// if we have the word, increment the count
+  		if(wordCounts.count(word) == 1)
+  		{
+  		    wordCounts[word]++;
+  		}  
+  		else //if it's not in the map yet add it
+  		{
+          wordCounts[word] = 1;
+  		}
+  		totalWordCount++;
+    }
+	}
+	// add category 
+	categoryProbabilities[categoryIndex]->setProbabilitiesWithCounts(wordCounts, totalWordCount, docCount);
+  
+	// and close the file
+	inputFile.close();
+  return docCount;
+}
+
 // Learning Methods
 
 void NaiveBayesClassifier::learnFromTrainingSet(string datasetName, string docSeparator)
@@ -93,97 +184,76 @@ void NaiveBayesClassifier::learnFromTrainingSet(string datasetName, string docSe
     // Only used if there are tags enclosing documents
     string openTag = "";
     string closeTag = "";
-    if (regex_match(docSeparator, regex("<[A-Z]+>")))
+    if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
     {
-      string separatorText = docSeparator;
-      separatorText.erase(0, 1);
-      separatorText.erase(separatorText.end()-1);
-      // Create close tag
-      int buffSize = 4+separatorText.size();
-      char buff[buffSize];
-      sprintf(buff, "</%s>", separatorText.c_str());
-      closeTag = buff;
-      // Create open tag
-      memset(buff, 0, buffSize);
-      sprintf(buff, "<%s", separatorText.c_str());
-      openTag = buff;
+      getOpenAndCloseTags(&openTag, &closeTag, docSeparator);
     }
     // for all categories 
     for (int i = 0; i < categoryCount; i++)
     {
-    	// get category name
-    	string categoryFileName = categoryProbabilities[i]->getCategoryName();
-	categoryFileName = datasetName +"train/" + categoryFileName;
-    	// read category file
-    	ifstream inputFile (categoryFileName);
-    	// create category map for words
-    	unordered_map <string, int> wordCounts;
-    	double totalWordCount = 0;
-    	// wanna be P(C)
-    	int docCount = 0;
-    	// Check for success
-    	if (!inputFile)
-    	{
-    	    // Cant do anything if we dont have the mega document...
-    	    cout << "learnFromTrainingSet::Unable to open training document file: " << categoryFileName << endl;
-    	    exit(-1);
-    	}
-    	// While there's still stuff left to read...
-    	while (inputFile)
-    	{
-    	    // Read one line at a time
-    	    string line;
-    	    string word;
-    	    getline(inputFile, line);
-          if (docSeparator.compare("\n") == 0)
-          {
-            docCount++;
-          }
-          else if (regex_match(docSeparator, regex("<[A-Z]+>")))
-          {
-            if (line.compare(0, openTag.size(), openTag) == 0)
-            {
-              // Just ignore the document dividers
-              continue;
-            }
-            else if (line.compare(closeTag) == 0)
-            {
-              // Update docCount for close tags
-              docCount++;
-              continue;
-            }
-          }
-    	    // read word by word
-    	    istringstream iss(line);
-    	    // for each word update vector vocabular per category
-    	    while (getline(iss, word, ' '))
-    	    {
-        		// if we have the word, increment the count
-        		if(wordCounts.count(word) == 1)
-        		{
-        		    wordCounts[word]++;
-        		}  
-        		else //if it's not in the map yet add it
-        		{
-                wordCounts[word] = 1;
-        		}
-        		totalWordCount++;
-    	    }
-    	}
-    	// add category 
-    	categoryProbabilities[i]->setProbabilitiesWithCounts(wordCounts, totalWordCount, docCount);
-      
-    	// and close the file
-    	inputFile.close();
-    	globalDocCount += docCount;
+      int docCount = learnForCategory(datasetName, docSeparator, openTag, closeTag, i);
+      globalDocCount += docCount;
     }
     for (int i = 0; i < categoryCount; i++)
     {
-        categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
-        //cout << "Number of docs in category '" << categoryProbabilities[i]->getCategoryName() << "': " << categoryProbabilities[i]->getDocCount() << endl;
-        //cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "' is: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
+      categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
+      //cout << "Number of docs in category '" << categoryProbabilities[i]->getCategoryName() << "': " << categoryProbabilities[i]->getDocCount() << endl;
+      //cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "' is: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
     }
     return;
+}
+
+struct CategoryChunk {
+  int offset;
+  int size;
+  CategoryChunk(int o=0, int s=0):offset(o), size(s){}
+};
+
+void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, string docSeparator, int size, int rank)
+{
+    // Only used if there are tags enclosing documents
+    string openTag = "";
+    string closeTag = "";
+    if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
+    {
+      getOpenAndCloseTags(&openTag, &closeTag, docSeparator);
+    }
+    // Partition the categories evenly amongst all processors
+    struct CategoryChunk *categoryChunks = new struct CategoryChunk[size];
+    int chunkSize = categoryCount / size;
+    int leftOver = categoryCount % size;
+    for (int i = 0; i < size; i++)
+    {
+      categoryChunks[i] = CategoryChunk(0, chunkSize);
+      if (leftOver > 0)
+      {
+        categoryChunks[i].size++;
+        leftOver--;
+      }
+      if (i != 0)
+      {
+        categoryChunks[i].offset = categoryChunks[i-1].offset + categoryChunks[i-1].size;
+      }
+    }
+    // Each processor keeps its own global doc count
+    int myGlobalDocCount = 0;
+    // Loop through all the categories this processor is responsible for
+    for (int i = categoryChunks[rank].offset; i < categoryChunks[rank].offset+categoryChunks[rank].size; i++)
+    {
+      int docCount = learnForCategory(datasetName, docSeparator, openTag, closeTag, i);
+      myGlobalDocCount += docCount;
+    }
+    // Need the full global doc count before priors can be set
+    int globalDocCount = 0;
+    MPI_Reduce(&myGlobalDocCount, &globalDocCount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&globalDocCount, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    // Set priors for the categories we are responsible for
+    for (int i = categoryChunks[rank].offset; i < categoryChunks[rank].offset+categoryChunks[rank].size; i++)
+    {
+      categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
+      cout << "Processor '" << rank << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
+    }
+    delete [] categoryChunks;
 }
 
 // Document Classification Internal Helpers
@@ -232,20 +302,9 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparat
   string docID = "";
   string openTag = "";
   string closeTag = "";
-  if (regex_match(docSeparator, regex("<[A-Z]+>")))
+  if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
   {
-    string separatorText = docSeparator;
-    separatorText.erase(0, 1);
-    separatorText.erase(separatorText.end()-1);
-    // Create close tag
-    int buffSize = 4+separatorText.size();
-    char buff[buffSize];
-    sprintf(buff, "</%s>", separatorText.c_str());
-    closeTag = buff;
-    // Create open tag
-    memset(buff, 0, buffSize);
-    sprintf(buff, "<%s", separatorText.c_str());
-    openTag = buff;
+    getOpenAndCloseTags(&openTag, &closeTag, docSeparator);
   }
   while(inputFile)
   {
@@ -267,7 +326,7 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparat
       }
     }
     // Any separators consisting of only capital letters enclosed with <> will be treated the same
-    else if (regex_match(docSeparator, regex("<[A-Z]+>")))
+    else if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
     {
       if (isClassifyingDocument)
       {
@@ -337,7 +396,7 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparat
         // where word == w_i
         for (int i = 0; i < categoryCount; i++)
         {
-            classificationProbabilities[i] *= categoryProbabilities[i]->getProbabilityOfWord(word);
+            classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
         }
       }
       // For new line separator, the end of this while loop is the end of the doc

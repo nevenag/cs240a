@@ -43,8 +43,8 @@ double CategoryProbabilities::getProbabilityOfWord(string word)
 
 void CategoryProbabilities::setPriorProbabilityWithTotalDocCount(int totalDocCount)
 {
-  categoryPriorProbability = SCALING_FACTOR * ((double)docCount / totalDocCount);
-    // categoryPriorProbability = log(((double)docCount / totalDocCount));
+  // categoryPriorProbability = SCALING_FACTOR * ((double)docCount / totalDocCount);
+  categoryPriorProbability = log(((double)docCount / totalDocCount));
 }
 
 void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, int> wordCounts, double totalWordCount, int docCount)
@@ -52,15 +52,16 @@ void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, in
     this->docCount = docCount;
     // Vocab size + 1 for unknown word
     int vocabSize = wordCounts.size() + 1;
-    for (auto wordCountPair : wordCounts)
+    typedef unordered_map<string, int>::iterator it_type;
+    for (it_type iterator = wordCounts.begin(); iterator != wordCounts.end(); iterator++)
     {
-        // add-one smoothing
-        // wordLikelihoodProbabilities[wordCountPair.first] = log(( (wordCountPair.second + ALPHA) / (totalWordCount + ALPHA*vocabSize) ));
-      wordLikelihoodProbabilities[wordCountPair.first] = SCALING_FACTOR*(wordCountPair.second + ALPHA) / (totalWordCount + ALPHA*vocabSize);
+      // add-one smoothing
+      wordLikelihoodProbabilities[iterator->first] = log(( (iterator->second + ALPHA) / (totalWordCount + ALPHA*vocabSize) ));
+        // wordLikelihoodProbabilities[iterator->first] = SCALING_FACTOR*(iterator->second + ALPHA) / (totalWordCount + ALPHA*vocabSize);
     }
     // Unknown words have a fixed probability according to add-alpha smoothing
-    // unknownWordProbability = log((ALPHA / (totalWordCount + ALPHA*vocabSize)));
-    unknownWordProbability = SCALING_FACTOR*ALPHA / (totalWordCount + ALPHA*vocabSize);
+    unknownWordProbability = log((ALPHA / (totalWordCount + ALPHA*vocabSize)));
+    // unknownWordProbability = SCALING_FACTOR*ALPHA / (totalWordCount + ALPHA*vocabSize);
 }
 
 void CategoryProbabilities::updateCountForWord(string word)
