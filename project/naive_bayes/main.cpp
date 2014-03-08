@@ -1,12 +1,36 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <ctime>
+#include <string>
+#include <vector>
+#include <map>
+#include <algorithm>
 
 #include "naive_bayes.hpp"
+#include "validator.hpp"
+
+#define NEWS_20		1
+#define REUTERS		2
+#define ENRON		3
+
+#define NEWS_20_NAME	"./20news/"	
+#define REUTERS_NAME	"./reuters/"	
+#define ENRON_NAME	"./enron/"
+
+#define NAIVE_BAYES_CLASSIFIER	1
+#define N_GRAM_CLASSIFIER	2
+
+#define NAIVE_BAYES_FILE_NAME	"naive_bayes_classified";
+#define N_GRAM_FILE_NAME	"n_gram_classified";
+
 
 using namespace std;
 
+
 int main()
 {
+  // Select the dataset
   int datasetNumber;
   string datasetName;
   cout << "main::select dataset" << endl;
@@ -15,14 +39,14 @@ int main()
   cout << "3 for enron" << endl;
   cin >> datasetNumber;
   switch(datasetNumber){
-    case 1:
-      datasetName = "./20news/";
+    case NEWS_20:
+      datasetName = NEWS_20_NAME;
       break;
-    case 2:
-      datasetName = "";
+    case REUTERS:
+      datasetName = REUTERS_NAME;
       break;
-    case 3:
-      datasetName = "";
+    case ENRON:
+      datasetName = ENRON_NAME;
       break;
     default:
       cout << "main:: not able to select dataset" << endl;
@@ -44,6 +68,9 @@ int main()
   nbClassifier.classifyDocument(documentToClassify);
   runTime = clock() - start;
   cout << "Elapsed time for classification: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
+  
+  Validator validate(ENRON, NAIVE_BAYES_CLASSIFIER);
+  //Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER);
   
   return 0;
 }
