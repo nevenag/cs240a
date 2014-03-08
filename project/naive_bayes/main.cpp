@@ -32,7 +32,7 @@ int main()
 {
   // Select the dataset
   int datasetNumber;
-  string datasetName;
+  string datasetName, testSetSeparator;
   cout << "main::select dataset" << endl;
   cout << "1 for 20news" << endl;
   cout << "2 for reuters" << endl;
@@ -41,9 +41,11 @@ int main()
   switch(datasetNumber){
     case NEWS_20:
       datasetName = NEWS_20_NAME;
+      testSetSeparator = "\n";
       break;
     case REUTERS:
       datasetName = REUTERS_NAME;
+      testSetSeparator = "<BODY>";
       break;
     case ENRON:
       datasetName = ENRON_NAME;
@@ -59,7 +61,7 @@ int main()
   nbClassifier.printAllCategoryNames();
   // How long does the training phase take?
   clock_t start = clock();
-  nbClassifier.learnFromTrainingSet(datasetName);
+  nbClassifier.learnFromTrainingSet(datasetName, testSetSeparator);
   clock_t runTime = clock() - start;
   cout << "Elapsed time for learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
   // How quickly can we categorize a single docuemnt?
@@ -69,8 +71,15 @@ int main()
   runTime = clock() - start;
   cout << "Elapsed time for classification: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
   
+  // How about a whole test set
+  string sampleTestSetFile = datasetName + "test/mega_document";
+  start = clock();
+  nbClassifier.classifyTestSet(datasetName, testSetSeparator);
+  runTime = clock() - start;
+  cout << "Elapsed time for classification of entire test set: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
+  
   Validator validate(ENRON, NAIVE_BAYES_CLASSIFIER);
   //Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER);
-  
+
   return 0;
 }

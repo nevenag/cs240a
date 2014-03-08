@@ -10,7 +10,8 @@ class NaiveBayesClassifier
   public:
     NaiveBayesClassifier(std::string);
     void printAllCategoryNames();
-    void learnFromTrainingSet(std::string);
+    void learnFromTrainingSet(std::string,std::string);
+    void classifyTestSet(std::string,std::string);
     void classifyDocument(std::string);
   private:
     // Private members

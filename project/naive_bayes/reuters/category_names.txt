@@ -20,7 +20,7 @@ copra-cake
 corn
 corn-oil
 cornglutenfeed
-cotton 
+cotton
 cotton-meal
 cotton-oil
 cottonseed
@@ -73,7 +73,7 @@ meal-feed
 mexpeso
 money-fx
 money-supply
-naphtha     
+naphtha
 nat-gas
 nickel
 nkr

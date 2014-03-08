@@ -15,6 +15,7 @@ class CategoryProbabilities
     std::string getCategoryName() { return categoryName; };
     double getCategoryPriorProbability() { return categoryPriorProbability; };
     double getProbabilityOfWord(std::string);
+    int getDocCount() { return docCount; };
     // Setters
     void setProbabilitiesWithCounts(std::unordered_map<std::string,int>,double,int);
     void setPriorProbabilityWithTotalDocCount(int);
