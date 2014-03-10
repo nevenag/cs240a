@@ -530,7 +530,7 @@ void NaiveBayesClassifier::printAllCategoryNames()
 
 int NaiveBayesClassifier::getCategoryNames(string *categoryNames)
 {
-  categoryNames = new string[categoryCount];
+  //categoryNames = new string[categoryCount];
   for (int i = 0; i < categoryCount; i++)
   {
       categoryNames[i] = categoryProbabilities[i]->getCategoryName();

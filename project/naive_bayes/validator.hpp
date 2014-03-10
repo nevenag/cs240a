@@ -6,10 +6,12 @@
 class Validator
 {
   public:
-    Validator(int, int);
+    Validator(int, int, std::string*, int);
 	void validate(int dataset, int classifier);
+	void f_measure(std::string*, int);
   private:
-	
+	int dataset;
+	int classifier;	
 };
 
 #endif

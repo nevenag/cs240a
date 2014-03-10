@@ -52,6 +52,9 @@ int main(int argc, char* argv[])
   // Select the dataset
   int datasetNumber = atoi(argv[1]);
   string datasetName, testSetSeparator;
+  string* categoryNames;
+  int categoryNames_size;
+
   switch(datasetNumber){
     case NEWS_20:
       datasetName = NEWS_20_NAME;
@@ -120,10 +123,13 @@ int main(int argc, char* argv[])
       exit(-1);
     }
   }
-  
-  
-  Validator validate(ENRON, NAIVE_BAYES_CLASSIFIER);
+	
+	categoryNames_size = nbClassifier.getCategoryCount();
+	categoryNames = new string[categoryNames_size];
+	nbClassifier.getCategoryNames(categoryNames);
+  Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
   //Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER);
-
+  delete [] categoryNames;
+  
   return 0;
 }
