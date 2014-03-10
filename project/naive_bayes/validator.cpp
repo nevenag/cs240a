@@ -24,8 +24,6 @@
 #define NAIVE_BAYES_FILE_NAME	"naive_bayes_classified";
 #define N_GRAM_FILE_NAME	"n_gram_classified";
 
-
-
 typedef std::vector<std::string>      categories;
 
 using namespace std;
@@ -129,7 +127,7 @@ void validate(int dataset, int classifier)
   while (inputFilea)
   {
     // Read one line at a time
-	string line;
+		string line;
     string docId;
     string catName;
     getline(inputFilea, line);
@@ -163,23 +161,14 @@ void validate(int dataset, int classifier)
 		// do they have our category?
 		if(std::find(real_cats.begin(), real_cats.end(), found_cat)!=real_cats.end())
 		{
-			cout << "found " + found_cat << endl; 
 			correct++;
 		}else
 		{
-			cout << "didn't find " + found_cat << endl;
 			incorrect++;
 		}
 		
 		//cout << "sec " << it->second << endl;
 	}
-  // got through classified and 
-  // for each docId 
-  // check if its category belongs to the list of categories
-  // from the test_set_classified list for the same docId.
-  
-  // calculate
-  
 }
 
 
@@ -191,6 +180,7 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	double recall = 0;
 	int correct = 0;
 	int incorrect = 0;
+	// results in files with names:
 	string test_set_classified_name = "test_set_classified";
 	std::string classified_name;
 	// true values from the test set
@@ -199,24 +189,20 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	unordered_map<string, string> classified;
 	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
 	std::unordered_map<string,string>::iterator it;
-	std::map<std::pair<std::string, std::string> , int> conf_mat_it;
-	
-	std::map<string,string>::iterator itm;
-	
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
-	std::map<std::pair<std::string, std::string> , int> confussion_matrix;
-	
 	int dataset = this->dataset;
 	int classifier = this->classifier;
-	//double** confussionM;
-	
+	std::map <std::string, int> indeces;
+	// confussion matrix
 	int** confussionM  = new int*[categoryNames_size];
+	// allocate confussion matrix
 	for(int i = 0; i < categoryNames_size; ++i)
 	{
 		confussionM [i] = new int[categoryNames_size];
 	}
 	
 	// TODO move all this to constructor
+	
 	// what is the dataset?
 	switch(dataset){
 		case NEWS_20:
@@ -248,9 +234,7 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 			cout << "f-measure:: can't recognize the classifier" << endl;
 			break;
 	}
-	
 	// TODO move those reads to a separate method.
-	
 	// read results we got
 	ifstream inputFile (classified_name);
 	if (!inputFile)
@@ -258,26 +242,23 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 		cout << "f-measure::Unable to open the file: " << classified_name << endl;
 		exit(-1);
 	}
-	// While there's still stuff left to read...
 	while (inputFile)
 	{
 		// Read one line at a time
 		string line;
 		string docId;
-		string catName;
 		getline(inputFile, line);
 		// read the document id
 		istringstream iss(line);
 		getline(iss, docId, ' ');
-		categories cats;
 		string cat;
 		// read all the topics that are associated to this docId
 		getline(iss, cat, ' ');
 		// and add them to the list of topics for that docId
 		classified[docId] = cat;
-		
 	}
 	inputFile.close();
+	
 	// read the true values
 	ifstream inputFilea (test_set_classified_name);
 	if (!inputFilea)
@@ -287,15 +268,12 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	}
 	while (inputFilea)
 	{
-		// Read one line at a time
 		string line;
 		string docId;
-		string catName;
 		getline(inputFilea, line);
 		// read the document id
 		istringstream iss(line);
 		getline(iss, docId, ' ');
-		categories cats;
 		string cat;
 		// read all the topics that are associated to this docId
 		getline(iss, cat, ' ');
@@ -303,16 +281,16 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 		test_set_classified[docId] = cat;
 	}
 	inputFilea.close();
+
 	// docId, <true_cat, classified_cat>
 	// TODO test for all kinds of exceptions!!!!
 	for (it=classified.begin(); it!=classified.end(); ++it){
-		// it's a string
-		// it->first is docID followed by pair <truth-str, classified-str>
+		// docId is a string
+		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
 		confussion[it->first] = std::make_pair(test_set_classified[it->first], it->second);
-		//cout << it->second << endl;
-		
 	}
-	
+
+	// initialize confussion matrix to zeros
 	for (int i = 0; i < categoryNames_size; i++){
 		for (int j = 0; j < categoryNames_size; j++)
 		{
@@ -320,29 +298,25 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 		}
 	}
 	
-	std::map <std::string, int> indeces;
-	
-	for (int index = 0; index < categoryNames_size; index++)
-	{
-		indeces[categoryNames[index]] = index;
-	}	
-	
+	/*
+	 Build a map that will give us an index - int for each category name
+	 this way we can store the whole matrix as a simple in[][] matrix.
+	 */
 	for (int index = 0; index < categoryNames_size; index++)
 	{
 		indeces[categoryNames[index]] = index;
 	}
 	
-	//EXCEPTIONS!!
+	//TODO EXCEPTIONS!! check for not existing stuff
 	for (itt=confussion.begin(); itt!=confussion.end(); ++itt){
 		std::pair<std::string, std::string> cats1 = itt->second;
 		int i = indeces[cats1.first];
 		int j = indeces[cats1.second];
-		//cout << "put " << i << endl;
 		confussionM[i][j] +=1;
 	}
 	
+	 //print the confussion_matrix
 	cout << "confussion matrix: "<< endl;
-	
 	for (int i = 0; i < categoryNames_size; i++){
 		//cout << "row" << endl;
 		for (int j = 0; j < categoryNames_size; j++)
@@ -353,14 +327,10 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 		cout << endl;
 	}
 	
-	
+	// deallocate the matrix
 	for (int i = 0; i < categoryNames_size; i++)
 	{
 		delete [] confussionM[i];
-	}
-	
+	}	
 	delete [] confussionM;
-	
-	
 }
-	
