@@ -28,14 +28,14 @@ typedef std::vector<std::string>      categories;
 
 using namespace std;
 
-Validator::Validator(int dataset, int classifier, string* categoryNames, int categoryNames_size)
+Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 {
 	cout << "Validator::Validator " << endl;
 	cout << dataset << " 	" << classifier << endl;
 	this->dataset = dataset;
 	this->classifier = classifier;
 	//validate(dataset, classifier);
-	f_measure(categoryNames, categoryNames_size);
+	f_measure(categoryNames, n);
 }
 
 
@@ -172,12 +172,9 @@ void validate(int dataset, int classifier)
 }
 
 
-void Validator::f_measure(string* categoryNames, int categoryNames_size)
+void Validator::f_measure(string* categoryNames, int n)
 {	
 	cout << "Validator::f_measure()" << endl;
-	double F_measure = 0;
-	double precission = 0;
-	double recall = 0;
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
@@ -194,11 +191,16 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	int classifier = this->classifier;
 	std::map <std::string, int> indeces;
 	// confussion matrix
-	int** confussionM  = new int*[categoryNames_size];
+	int** confussionM  = new int*[n];
+	double* recall = new double[n];
+	double* precission = new double[n];
+	double F_Measure = 0;
+	double accurancy = 0;
+	
 	// allocate confussion matrix
-	for(int i = 0; i < categoryNames_size; ++i)
+	for(int i = 0; i < n; ++i)
 	{
-		confussionM [i] = new int[categoryNames_size];
+		confussionM [i] = new int[n];
 	}
 	
 	// TODO move all this to constructor
@@ -291,8 +293,8 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	}
 
 	// initialize confussion matrix to zeros
-	for (int i = 0; i < categoryNames_size; i++){
-		for (int j = 0; j < categoryNames_size; j++)
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < n; j++)
 		{
 			confussionM[i][j] = 0;
 		}
@@ -302,7 +304,7 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	 Build a map that will give us an index - int for each category name
 	 this way we can store the whole matrix as a simple in[][] matrix.
 	 */
-	for (int index = 0; index < categoryNames_size; index++)
+	for (int index = 0; index < n; index++)
 	{
 		indeces[categoryNames[index]] = index;
 	}
@@ -310,25 +312,80 @@ void Validator::f_measure(string* categoryNames, int categoryNames_size)
 	//TODO EXCEPTIONS!! check for not existing stuff
 	for (itt=confussion.begin(); itt!=confussion.end(); ++itt){
 		std::pair<std::string, std::string> cats1 = itt->second;
-		int i = indeces[cats1.first];
+		int i = indeces[cats1.first];	
 		int j = indeces[cats1.second];
 		confussionM[i][j] +=1;
 	}
 	
 	 //print the confussion_matrix
 	cout << "confussion matrix: "<< endl;
-	for (int i = 0; i < categoryNames_size; i++){
+	for (int i = 0; i < n; i++){
 		//cout << "row" << endl;
-		for (int j = 0; j < categoryNames_size; j++)
+		for (int j = 0; j < n; j++)
 		{
-			cout << confussionM[i][j];
+			cout << confussionM[i][j];	
 			cout << " ";
 		}
 		cout << endl;
 	}
 	
+	// compute recall
+	double* temp = new double[n];
+	
+	double* sum_cij_for_all_j = new double[n];
+	
+	// second index iterates
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			sum_cij_for_all_j[i] += confussionM[i][j];
+		}
+	}
+
+	double* sum_cji_for_all_j = new double[n];
+	// first index iterates
+	
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			sum_cji_for_all_j[i] += confussionM[j][i];
+		}
+	}
+	
+	for (int i = 0; i < n; i++)
+	{
+		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
+	}
+	
+	for (int i = 0; i < n; i++)
+	{
+		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
+	}
+	
+	double all_sum = 0;
+	
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			all_sum += confussionM[i][j];
+		}
+	}
+	double all_ii = 0;
+	
+	for (int i = 0; i < n; i++)
+	{
+		all_ii += confussionM[i][i];
+	}	
+	
+	accurancy = all_ii / all_sum;
+	
+	cout << "accurancy: " << accurancy << endl;
+	
 	// deallocate the matrix
-	for (int i = 0; i < categoryNames_size; i++)
+	for (int i = 0; i < n; i++)
 	{
 		delete [] confussionM[i];
 	}	

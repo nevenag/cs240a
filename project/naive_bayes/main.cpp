@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
       cout << "Elapsed time for sequential classification: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       // How about a whole test set
       start = clock();
-      nbClassifier.classifyTestSet(datasetName, testSetSeparator);
+      nbClassifier.classifyTestSetParallel(datasetName, testSetSeparator);
       runTime = clock() - start;
       cout << "Elapsed time for sequential classification of entire test set: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       break;

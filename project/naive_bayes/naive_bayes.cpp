@@ -433,9 +433,26 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparat
   }
 }
 
-void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, string docSeparator)
+void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, string docSeparator, int p)
 {
-  
+	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x05", "x07",
+													"x08", "x09", "x10", "x11", "x12", "x13", "x14", "x15"};
+
+	string outputFile = datasetName+"naive_bayes_classified";
+	// TODO check if opened
+	std::ofstream ofs;
+	ofs.open(outputFile, std::ofstream::app);
+	if (!ofs)
+	{
+		cout << "classifyTestSetParallel::Unable to open output file" << endl;
+		exit(-1);
+	}
+	
+	// cilk_for
+	for(int i = 0; i < p; i++){
+		classifyTestSet(fileNames[i], "\n");
+	}
+		
 }
 
 void NaiveBayesClassifier::classifyDocument(string documentFileName)
