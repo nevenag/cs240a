@@ -19,7 +19,7 @@ class NaiveBayesClassifier
     // Public Utility
     void printAllCategoryNames();
     // Learning
-    void learnFromTrainingSet(std::string,std::string);
+    void learnFromTrainingSet(std::string);
     void learnFromTrainingSetParallel(std::string,int);
     // Classification
     void classifyTestSet(std::string);

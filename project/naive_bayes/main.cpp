@@ -55,8 +55,7 @@ int main(int argc, char* argv[])
   int executionNumber = atoi(argv[2]);
   if (executionNumber == PARALLEL_EXECUTION && argc != 4)
     printUsageAndExit();
-  // Select the dataset
-  int datasetNumber = atoi(argv[1]);
+  //
   string datasetName;
   string* categoryNames;
   int categoryNames_size;
@@ -78,8 +77,7 @@ int main(int argc, char* argv[])
   // Initialize the NB Classifier
   string categoryNamesFile = datasetName + "category_names.txt";
   NaiveBayesClassifier nbClassifier(categoryNamesFile);
-  // Select parallel or sequential
-  int executionNumber = atoi(argv[2]);
+
   clock_t start, runTime;
   switch (executionNumber)
   {
@@ -123,9 +121,7 @@ int main(int argc, char* argv[])
       start = clock();
       nbClassifier.learnFromTrainingSetParallel(datasetName, p);
       runTime = clock() - start;
-      if (rank == 0)
-        cout << "Elapsed time for parallel learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
-      MPI_Finalize();
+      cout << "Elapsed time for parallel learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       break;
     }
     default:
