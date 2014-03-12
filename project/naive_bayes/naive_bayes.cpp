@@ -180,8 +180,7 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
       }
     }
     // Each processor keeps its own global doc count
-    int globalDocCounts[numProcs];
-    memset(globalDocCounts, 0, numProcs*sizeof(int));
+    int *globalDocCounts = new int[numProcs]();
     // Loop through all the categories this processor is responsible for
     cilk_for (int j = 0; j < numProcs; j++)
     {
