@@ -154,7 +154,6 @@ void Validator::validate(int dataset, int classifier)
 		string doc_Id = it->first;
 		categories cats = it->second;
 		string found_cat = cats.front();
-		cout << "front " + found_cat << endl; 
 		
 		// now get the coresponding true value from the test set:
 		categories real_cats = test_set_classified[doc_Id];
