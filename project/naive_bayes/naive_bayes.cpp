@@ -180,7 +180,8 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
       }
     }
     // Each processor keeps its own global doc count
-    int globalDocCounts[numProcs]();
+    int globalDocCounts[numProcs];
+    memset(globalDocCounts, 0, numProcs*sizeof(int));
     // Loop through all the categories this processor is responsible for
     cilk_for (int j = 0; j < numProcs; j++)
     {
@@ -201,7 +202,7 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
       for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
       {
         categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
-        cout << "Processor '" << rank << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
+        cout << "Processor '" << j << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
       }
     }
     delete [] categoryChunks;
@@ -322,7 +323,7 @@ void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
 	
 	// cilk_for
 	for(int i = 0; i < p; i++){
-		classifyTestSet(fileNames[i], "\n");
+		classifyTestSet(fileNames[i]);
 	}
 		
 }

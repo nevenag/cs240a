@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     	// number of processors
     	int p = atoi(argv[3]);
       // Tell cilk how many processors we want
-      __cilkrts_set_param("nworkers", argv[3]);
+      __cilkrts_set_param((void *)"nworkers", argv[3]);
       nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = clock();
