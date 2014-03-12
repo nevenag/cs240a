@@ -1,4 +1,4 @@
-#include "mpi.h"
+#include <cilk/cilk.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -47,24 +47,26 @@ void printUsageAndExit()
 
 int main(int argc, char* argv[])
 {
-  if (argc != 4)
+  if (argc < 3)
     printUsageAndExit();
   // Select the dataset
   int datasetNumber = atoi(argv[1]);
-  string datasetName, testSetSeparator;
+  // Sequential or parallel?
+  int executionNumber = atoi(argv[2]);
+  if (executionNumber == PARALLEL_EXECUTION && argc != 4)
+    printUsageAndExit();
+  // Select the dataset
+  int datasetNumber = atoi(argv[1]);
+  string datasetName;
   string* categoryNames;
   int categoryNames_size;
-	// number of processors
-	int p = atoi(argv[3]);
-
+	//
   switch(datasetNumber){
     case NEWS_20:
       datasetName = NEWS_20_NAME;
-      testSetSeparator = "\n";
       break;
     case REUTERS:
       datasetName = REUTERS_NAME;
-      testSetSeparator = "<BODY>";
       break;
     case ENRON:
       datasetName = ENRON_NAME;
@@ -86,7 +88,7 @@ int main(int argc, char* argv[])
       nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = clock();
-      nbClassifier.learnFromTrainingSet(datasetName, testSetSeparator);
+      nbClassifier.learnFromTrainingSet(datasetName);
       runTime = clock() - start;
       cout << "Elapsed time for sequential learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       // How quickly can we categorize a single docuemnt?
@@ -97,7 +99,7 @@ int main(int argc, char* argv[])
       cout << "Elapsed time for sequential classification: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       // How about a whole test set
       start = clock();
-      nbClassifier.classifyTestSet(datasetName, testSetSeparator);
+      nbClassifier.classifyTestSet(datasetName);
       runTime = clock() - start;
       cout << "Elapsed time for sequential classification of entire test set: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
 			
@@ -112,15 +114,14 @@ int main(int argc, char* argv[])
     }
     case PARALLEL_EXECUTION:
     {
-      MPI_Init(&argc, &argv);
-      int size, rank;
-      MPI_Comm_size(MPI_COMM_WORLD, &size);
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      if (rank == 0)
-        nbClassifier.printAllCategoryNames();
+    	// number of processors
+    	int p = atoi(argv[3]);
+      // Tell cilk how many processors we want
+      __cilkrts_set_param("nworkers", argv[3]);
+      nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = clock();
-      nbClassifier.learnFromTrainingSetParallel(datasetName, testSetSeparator, size, rank);
+      nbClassifier.learnFromTrainingSetParallel(datasetName, p);
       runTime = clock() - start;
       if (rank == 0)
         cout << "Elapsed time for parallel learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;

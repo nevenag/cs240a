@@ -5,6 +5,12 @@
 #include <unordered_map>
 #include "category_probabilities.hpp"
 
+struct CategoryChunk {
+  int offset;
+  int size;
+  CategoryChunk(int o=0, int s=0):offset(o), size(s){}
+};
+
 class NaiveBayesClassifier
 {
   public:
@@ -14,10 +20,10 @@ class NaiveBayesClassifier
     void printAllCategoryNames();
     // Learning
     void learnFromTrainingSet(std::string,std::string);
-    void learnFromTrainingSetParallel(std::string,std::string,int,int);
+    void learnFromTrainingSetParallel(std::string,int);
     // Classification
-    void classifyTestSet(std::string,std::string);
-    void classifyTestSetParallel(std::string,std::string, int p);
+    void classifyTestSet(std::string);
+    void classifyTestSetParallel(std::string,int);
     void classifyDocument(std::string);
     // Getters
     CategoryProbabilities** getCategoryProbabilities() { return categoryProbabilities; };
@@ -30,7 +36,7 @@ class NaiveBayesClassifier
     // Private methods
     void readInputCategories(std::string,std::string*);
     void readInputVocabulary(std::string,std::string*);
-    int learnForCategory(std::string,std::string,std::string,std::string,int);
+    int learnForCategory(std::string,int);
 };
 
 #endif

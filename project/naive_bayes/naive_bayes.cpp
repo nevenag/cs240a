@@ -1,11 +1,10 @@
-#include "mpi.h"
+#include <cilk/cilk.h>
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <sstream>
 #include <cstring>
-#include <boost/regex.hpp>
 #include "naive_bayes.hpp"
 
 #define MAX_NUM_CATEGORIES 200
@@ -87,27 +86,9 @@ void NaiveBayesClassifier::readInputVocabulary(string fileName, string *category
     return;
 }
 
-// Internal Helpers for Parsing Dataset Info
-
-void getOpenAndCloseTags(string *openTag, string *closeTag, string docSeparator)
-{
-    string separatorText = docSeparator;
-    separatorText.erase(0, 1);
-    separatorText.erase(separatorText.end()-1);
-    // Create close tag
-    int buffSize = 4+separatorText.size();
-    char buff[buffSize];
-    sprintf(buff, "</%s>", separatorText.c_str());
-    (*closeTag) = buff;
-    // Create open tag
-    memset(buff, 0, buffSize);
-    sprintf(buff, "<%s", separatorText.c_str());
-    (*openTag) = buff;
-}
-
 // Private Helpers for Learning Methods
 
-int NaiveBayesClassifier::learnForCategory(string datasetName, string docSeparator, string openTag, string closeTag, int categoryIndex)
+int NaiveBayesClassifier::learnForCategory(string datasetName, int categoryIndex)
 {
 	// get category name
 	string categoryFileName = categoryProbabilities[categoryIndex]->getCategoryName();
@@ -133,24 +114,6 @@ int NaiveBayesClassifier::learnForCategory(string datasetName, string docSeparat
     string line;
     string word;
     getline(inputFile, line);
-    if (docSeparator.compare("\n") == 0)
-    {
-      docCount++;
-    }
-    else if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
-    {
-      if (line.compare(0, openTag.size(), openTag) == 0)
-      {
-        // Just ignore the document dividers
-        continue;
-      }
-      else if (line.compare(closeTag) == 0)
-      {
-        // Update docCount for close tags
-        docCount++;
-        continue;
-      }
-    }
     // read word by word
     istringstream iss(line);
     // for each word update vector vocabular per category
@@ -167,6 +130,7 @@ int NaiveBayesClassifier::learnForCategory(string datasetName, string docSeparat
   		}
   		totalWordCount++;
     }
+    docCount++;
 	}
 	// add category 
 	categoryProbabilities[categoryIndex]->setProbabilitiesWithCounts(wordCounts, totalWordCount, docCount);
@@ -178,20 +142,13 @@ int NaiveBayesClassifier::learnForCategory(string datasetName, string docSeparat
 
 // Learning Methods
 
-void NaiveBayesClassifier::learnFromTrainingSet(string datasetName, string docSeparator)
+void NaiveBayesClassifier::learnFromTrainingSet(string datasetName)
 {
     int globalDocCount = 0;
-    // Only used if there are tags enclosing documents
-    string openTag = "";
-    string closeTag = "";
-    if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
-    {
-      getOpenAndCloseTags(&openTag, &closeTag, docSeparator);
-    }
     // for all categories 
     for (int i = 0; i < categoryCount; i++)
     {
-      int docCount = learnForCategory(datasetName, docSeparator, openTag, closeTag, i);
+      int docCount = learnForCategory(datasetName, i);
       globalDocCount += docCount;
     }
     for (int i = 0; i < categoryCount; i++)
@@ -203,26 +160,13 @@ void NaiveBayesClassifier::learnFromTrainingSet(string datasetName, string docSe
     return;
 }
 
-struct CategoryChunk {
-  int offset;
-  int size;
-  CategoryChunk(int o=0, int s=0):offset(o), size(s){}
-};
-
-void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, string docSeparator, int size, int rank)
+void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int numProcs)
 {
-    // Only used if there are tags enclosing documents
-    string openTag = "";
-    string closeTag = "";
-    if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
-    {
-      getOpenAndCloseTags(&openTag, &closeTag, docSeparator);
-    }
     // Partition the categories evenly amongst all processors
-    struct CategoryChunk *categoryChunks = new struct CategoryChunk[size];
-    int chunkSize = categoryCount / size;
-    int leftOver = categoryCount % size;
-    for (int i = 0; i < size; i++)
+    struct CategoryChunk *categoryChunks = new struct CategoryChunk[numProcs];
+    int chunkSize = categoryCount / numProcs;
+    int leftOver = categoryCount % numProcs;
+    for (int i = 0; i < numProcs; i++)
     {
       categoryChunks[i] = CategoryChunk(0, chunkSize);
       if (leftOver > 0)
@@ -236,22 +180,29 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, stri
       }
     }
     // Each processor keeps its own global doc count
-    int myGlobalDocCount = 0;
+    int globalDocCounts[numProcs]();
     // Loop through all the categories this processor is responsible for
-    for (int i = categoryChunks[rank].offset; i < categoryChunks[rank].offset+categoryChunks[rank].size; i++)
+    cilk_for (int j = 0; j < numProcs; j++)
     {
-      int docCount = learnForCategory(datasetName, docSeparator, openTag, closeTag, i);
-      myGlobalDocCount += docCount;
+      for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
+      {
+        globalDocCounts[j] += learnForCategory(datasetName, i);
+      }
     }
-    // Need the full global doc count before priors can be set
+    // Sum up global doc counts
     int globalDocCount = 0;
-    MPI_Reduce(&myGlobalDocCount, &globalDocCount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&globalDocCount, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    // Set priors for the categories we are responsible for
-    for (int i = categoryChunks[rank].offset; i < categoryChunks[rank].offset+categoryChunks[rank].size; i++)
+    for (int i = 0; i < numProcs; i++)
     {
-      categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
-      cout << "Processor '" << rank << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
+      globalDocCount += globalDocCounts[i];
+    }
+    // Set priors for the categories we are responsible for
+    cilk_for (int j = 0; j < numProcs; j++)
+    {
+      for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
+      {
+        categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
+        cout << "Processor '" << rank << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
+      }
     }
     delete [] categoryChunks;
 }
@@ -276,7 +227,7 @@ string constructClassificationString(string docID, string categoryName)
   @param docSeparator: The separator tag placed around documents. If this is equal to \n then
                        each line will be treated as a separate document.
 */
-void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparator)
+void NaiveBayesClassifier::classifyTestSet(string datasetName)
 {
 	// Open document file
 	ifstream inputFile (datasetName+"test/mega_document");
@@ -297,143 +248,64 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName, string docSeparat
   // For every document, we will need to store the P(C_j|d) terms for each C_j, initialized to
   // the prior probability, i.e. P(C_j)
   double *classificationProbabilities = new double[categoryCount];
-  // Boolean flag used to determine whether or not we are parsing a document
-  bool isClassifyingDocument = false;
+  // String to hold docIDs
   string docID = "";
-  string openTag = "";
-  string closeTag = "";
-  if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
-  {
-    getOpenAndCloseTags(&openTag, &closeTag, docSeparator);
-  }
   while(inputFile)
   {
     // Grab one line at a time
     string line;
     getline(inputFile, line);
-    // The docSeparator is used to determine when to update the boolean flag isClassifyingDocument
-    if (docSeparator.compare("\n") == 0)
+    // Each new line is a document
+    // Get the docID, it will be the first word of the line
+    istringstream tempISS(line);
+    getline(tempISS, docID, '\t');
+    // Need to reinitialize probabilities
+    for (int i = 0; i < categoryCount; i++)
     {
-      // Then each new line is a document
-      isClassifyingDocument = true;
-      // Get the docID, it will be the first word of the line
-	    istringstream tempISS(line);
-	    getline(tempISS, docID, '\t');
-      // Need to reinitialize probabilities
+        classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
+    }
+    // The main starting point for looping over a documents words
+    istringstream iss(line);
+    string word;
+    while (getline(iss, word, ' '))
+    {
+      // Need to figure out P(w_i|C_j) for each C_j
+      // where word == w_i
       for (int i = 0; i < categoryCount; i++)
       {
-          classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
+          classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
       }
     }
-    // Any separators consisting of only capital letters enclosed with <> will be treated the same
-    else if (boost::regex_match(docSeparator, boost::regex("<[A-Z]+>")))
+    // We just finished calculating probabilities for a document so we need to classify
+    // the document now...Need to find the max probability
+    double maximum = classificationProbabilities[0];
+    int index = 0;
+#ifdef DEBUG_2
+    cout << "Probability of category '" << categoryProbabilities[0]->getCategoryName() << "': " << maximum << endl;
+#endif
+    for (int i = 1; i < categoryCount; i++)
     {
-      if (isClassifyingDocument)
-      {
-        // Check for close tag
-        if (line.compare(closeTag) == 0)
-        {
-          // Ok we need to classify the document now...
-          // Need to find the max probability
-          double maximum = classificationProbabilities[0];
-          int index = 0;
-          for (int i = 1; i < categoryCount; i++)
-          {
-              if (classificationProbabilities[i] > maximum)
-              {
-                  maximum = classificationProbabilities[i];
-                  index = i;
-              }
-          }
-          // Now we need to store this max
-          string classificationString = constructClassificationString(docID,
-                                                                      categoryProbabilities[index]->getCategoryName());
 #ifdef DEBUG_2
-          cout << "About to write to output file:\n" << classificationString << endl;
+        cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "': " << classificationProbabilities[i] << endl;
 #endif
-          outputFile.write(classificationString.c_str(), classificationString.size());
-          docID = "";
-          // Update boolean flag and continue to next iteration of loop
-          isClassifyingDocument = false;
-          continue;
-        }
-      }
-      else
-      {
-        // Check for open tag
-        if (line.compare(0, openTag.size(), openTag) == 0)
+        if (classificationProbabilities[i] > maximum)
         {
-          // Need to grab the document ID, assume line is in form '<separatorText DOCID=docID>'
-          vector<string> elems;
-          stringstream ss(line);
-          getline(ss, docID, '=');
-          getline(ss, docID, '=');
-          docID.erase(docID.end()-1);
-          // Need to reinitialize probabilities
-          for (int i = 0; i < categoryCount; i++)
-          {
-              classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
-          }
-          // Update boolean flag and continue to next iteration of loop
-          isClassifyingDocument = true;
-          continue;
+            maximum = classificationProbabilities[i];
+            index = i;
         }
-      }
     }
-    else
-    {
-      cout << "Unsupported document separator: " << docSeparator << endl;
-      exit(-1);
-    }
-    // The main entry point for looping over a documents words
-    if (isClassifyingDocument)
-    {
-	    istringstream iss(line);
-      string word;
-	    while (getline(iss, word, ' '))
-	    {
-        // Need to figure out P(w_i|C_j) for each C_j
-        // where word == w_i
-        for (int i = 0; i < categoryCount; i++)
-        {
-            classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
-        }
-      }
-      // For new line separator, the end of this while loop is the end of the doc
-      if (docSeparator.compare("\n") == 0)
-      {
-        // We just finished calculating probabilities for a document so we need to classify
-        // the document now...Need to find the max probability
-        double maximum = classificationProbabilities[0];
-        int index = 0;
+    // Now we need to store this max
+    string classificationString = constructClassificationString(docID,
+                                                                categoryProbabilities[index]->getCategoryName());
 #ifdef DEBUG_2
-        cout << "Probability of category '" << categoryProbabilities[0]->getCategoryName() << "': " << maximum << endl;
+    cout << "About to write to output file:\n" << classificationString << endl;
 #endif
-        for (int i = 1; i < categoryCount; i++)
-        {
-#ifdef DEBUG_2
-            cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "': " << classificationProbabilities[i] << endl;
-#endif
-            if (classificationProbabilities[i] > maximum)
-            {
-                maximum = classificationProbabilities[i];
-                index = i;
-            }
-        }
-        // Now we need to store this max
-        string classificationString = constructClassificationString(docID,
-                                                                    categoryProbabilities[index]->getCategoryName());
-#ifdef DEBUG_2
-        cout << "About to write to output file:\n" << classificationString << endl;
-#endif
-        outputFile.write(classificationString.c_str(), classificationString.size());
-        docID = "";
-      }
-    }
+    outputFile.write(classificationString.c_str(), classificationString.size());
+    docID = "";
   }
 }
 
-void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, string docSeparator, int p)
+void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
 {
 	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x05", "x07",
 													"x08", "x09", "x10", "x11", "x12", "x13", "x14", "x15"};
