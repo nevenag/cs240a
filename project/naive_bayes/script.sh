@@ -1,11 +1,16 @@
 #!/bin/bash
-        DBS=$(nproc)
-        LINES=$(wc -l twenty_news_groups_test.tsv)
-        #echo $LINES/$DBS
-        FNAME=$(echo $LINES | awk 'BEGIN {FS=" "}{print $1}')
-        #echo $FNAME/4
-        LINEC=$(echo $(($FNAME/$DBS)))
-        echo $LINEC
-        split twenty_news_groups_test.tsv -d -l $LINEC
-        ./naivebayes 1 1 $DBS
-				rm x*
+if [ "$1" = "" ]; then
+	DBS=$(nproc)
+	echo "no arguments - reading nproc"
+else
+	DBS=$1
+	echo "user specified number of processors"
+fi
+LINES=$(wc -l twenty_news_groups_test.tsv)
+#echo $LINES/$DBS
+TOTALLINES=$(echo $LINES | awk 'BEGIN {FS=" "}{print $1}')
+LINEC=$(echo $(($TOTALLINES/$DBS)))
+echo $LINEC
+split twenty_news_groups_test.tsv -d -l $LINEC
+./naivebayes 1 1 $DBS
+rm x*
