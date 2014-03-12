@@ -24,7 +24,8 @@ class NaiveBayesClassifier
     // Classification
     void classifyTestSet(std::string);
     void classifyTestSetParallel(std::string,int);
-    void classifyDocument(std::string);
+    
+    std::unordered_map<std::string,std::string> classifyDocumentsInFile(std::string);
     // Getters
     CategoryProbabilities** getCategoryProbabilities() { return categoryProbabilities; };
     int getCategoryCount() { return categoryCount; };

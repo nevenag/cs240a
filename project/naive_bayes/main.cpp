@@ -89,18 +89,19 @@ int main(int argc, char* argv[])
       nbClassifier.learnFromTrainingSet(datasetName);
       runTime = clock() - start;
       cout << "Elapsed time for sequential learning: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
-      // How quickly can we categorize a single docuemnt?
-      string documentToClassify = "categorize.me";
+      // How about categorizing the whole test set?
       start = clock();
-      nbClassifier.classifyDocument(documentToClassify);
-      runTime = clock() - start;
-      cout << "Elapsed time for sequential classification: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
-      // How about a whole test set
-      start = clock();
-      nbClassifier.classifyTestSet(datasetName);
+      unordered_map<string, string> docClassifications = nbClassifier.classifyDocumentsInFile(datasetName+"test/mega_document");
       runTime = clock() - start;
       cout << "Elapsed time for sequential classification of entire test set: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
-			
+      // Print out all classifications
+      cout << "Document Classifications:" << endl;
+      typedef unordered_map<string, string>::iterator it_type;
+      for (it_type it = docClassifications.begin(); it != docClassifications.end(); it++)
+      {
+        cout << "\t" << it->first << " " << it->second << endl;
+      }
+      // Validator stuff
 			categoryNames_size = nbClassifier.getCategoryCount();
 			categoryNames = new string[categoryNames_size];
 			nbClassifier.getCategoryNames(categoryNames);
