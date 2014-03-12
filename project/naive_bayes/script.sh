@@ -8,3 +8,4 @@
         echo $LINEC
         split twenty_news_groups_test.tsv -d -l $LINEC
         ./naivebayes 1 1 $DBS
+				rm x*

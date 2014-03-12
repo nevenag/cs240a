@@ -34,14 +34,14 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 	cout << dataset << " 	" << classifier << endl;
 	this->dataset = dataset;
 	this->classifier = classifier;
-	//validate(dataset, classifier);
+	validate(dataset, classifier);
 	f_measure(categoryNames, n);
 }
 
 
 /* method goes to the dataset directory and compares
  * the values from the given classifier and real values */
-void validate(int dataset, int classifier)
+void Validator::validate(int dataset, int classifier)
 {
   double F_measure = 0;
   double precission = 0;
@@ -169,12 +169,16 @@ void validate(int dataset, int classifier)
 		
 		//cout << "sec " << it->second << endl;
 	}
+	cout << "correctly classified: " << correct << endl;
+	cout << "incorrectly classified: " << incorrect << endl; 
+	
+	
 }
 
 
 void Validator::f_measure(string* categoryNames, int n)
 {	
-	cout << "Validator::f_measure()" << endl;
+	cout << "Validator00::f_measure()" << endl;
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
@@ -184,9 +188,9 @@ void Validator::f_measure(string* categoryNames, int n)
 	unordered_map<string, string> test_set_classified;
 	// values from our classifier
 	unordered_map<string, string> classified;
-	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
 	std::unordered_map<string,string>::iterator it;
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
+	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
 	int dataset = this->dataset;
 	int classifier = this->classifier;
 	std::map <std::string, int> indeces;
@@ -236,60 +240,19 @@ void Validator::f_measure(string* categoryNames, int n)
 			cout << "f-measure:: can't recognize the classifier" << endl;
 			break;
 	}
-	// TODO move those reads to a separate method.
+	// TODO CILK_SPAWN for those two:
 	// read results we got
-	ifstream inputFile (classified_name);
-	if (!inputFile)
-	{
-		cout << "f-measure::Unable to open the file: " << classified_name << endl;
-		exit(-1);
-	}
-	while (inputFile)
-	{
-		// Read one line at a time
-		string line;
-		string docId;
-		getline(inputFile, line);
-		// read the document id
-		istringstream iss(line);
-		getline(iss, docId, ' ');
-		string cat;
-		// read all the topics that are associated to this docId
-		getline(iss, cat, ' ');
-		// and add them to the list of topics for that docId
-		classified[docId] = cat;
-	}
-	inputFile.close();
-	
+	readCategorizedData(classified_name, classified);
 	// read the true values
-	ifstream inputFilea (test_set_classified_name);
-	if (!inputFilea)
-	{
-		cout << "f-measure::Unable to open the file: " << test_set_classified_name << endl;
-		exit(-1);
-	}
-	while (inputFilea)
-	{
-		string line;
-		string docId;
-		getline(inputFilea, line);
-		// read the document id
-		istringstream iss(line);
-		getline(iss, docId, ' ');
-		string cat;
-		// read all the topics that are associated to this docId
-		getline(iss, cat, ' ');
-		// and add them to the list of topics for that docId
-		test_set_classified[docId] = cat;
-	}
-	inputFilea.close();
-
+	readCategorizedData(test_set_classified_name, test_set_classified);
 	// docId, <true_cat, classified_cat>
 	// TODO test for all kinds of exceptions!!!!
+	// TODO CILK_FOR
 	for (it=classified.begin(); it!=classified.end(); ++it){
-		// docId is a string
+			// docId is a string
 		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
 		confussion[it->first] = std::make_pair(test_set_classified[it->first], it->second);
+		string s = it->first;
 	}
 
 	// initialize confussion matrix to zeros
@@ -308,7 +271,6 @@ void Validator::f_measure(string* categoryNames, int n)
 	{
 		indeces[categoryNames[index]] = index;
 	}
-	
 	//TODO EXCEPTIONS!! check for not existing stuff
 	for (itt=confussion.begin(); itt!=confussion.end(); ++itt){
 		std::pair<std::string, std::string> cats1 = itt->second;
@@ -317,17 +279,7 @@ void Validator::f_measure(string* categoryNames, int n)
 		confussionM[i][j] +=1;
 	}
 	
-	 //print the confussion_matrix
-	cout << "confussion matrix: "<< endl;
-	for (int i = 0; i < n; i++){
-		//cout << "row" << endl;
-		for (int j = 0; j < n; j++)
-		{
-			cout << confussionM[i][j];	
-			cout << " ";
-		}
-		cout << endl;
-	}
+	//printMatrix(confussionM, n);
 	
 	// compute recall
 	double* temp = new double[n];
@@ -344,8 +296,7 @@ void Validator::f_measure(string* categoryNames, int n)
 	}
 
 	double* sum_cji_for_all_j = new double[n];
-	// first index iterates
-	
+	// first index iterates	
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
@@ -359,6 +310,7 @@ void Validator::f_measure(string* categoryNames, int n)
 		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
 	}
 	
+	// compute precision
 	for (int i = 0; i < n; i++)
 	{
 		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
@@ -390,4 +342,45 @@ void Validator::f_measure(string* categoryNames, int n)
 		delete [] confussionM[i];
 	}	
 	delete [] confussionM;
+}
+
+void Validator::readCategorizedData(string fileName, unordered_map<string, string> &classified)
+{
+
+	ifstream in (fileName);
+	if (!in)
+	{
+		cout << "readCategorizedData::Unable to open the file: " << fileName << endl;
+		exit(-1);
+	}
+	while (in)
+	{
+		// Read one line at a time
+		string line;
+		string docId;
+		getline(in, line);
+		// read the document id
+		istringstream iss(line);
+		getline(iss, docId, ' ');
+		string cat;
+		// read the category
+		getline(iss, cat, ' ');
+		// add to the map
+		classified[docId] = cat;
+	}
+	in.close();
+}
+
+void Validator::printMatrix(int** matrix, int n)
+{
+	//print the confussion_matrix
+	cout << "confussion matrix: "<< endl;
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < n; j++)
+		{
+			cout << matrix[i][j];	
+			cout << " ";
+		}
+		cout << endl;
+	}
 }
