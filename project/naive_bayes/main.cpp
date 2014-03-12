@@ -100,6 +100,14 @@ int main(int argc, char* argv[])
       nbClassifier.classifyTestSet(datasetName, testSetSeparator);
       runTime = clock() - start;
       cout << "Elapsed time for sequential classification of entire test set: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
+			
+			categoryNames_size = nbClassifier.getCategoryCount();
+			categoryNames = new string[categoryNames_size];
+			nbClassifier.getCategoryNames(categoryNames);
+			start = clock();
+			Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
+			runTime = clock() - start;
+			cout << "Elapsed time for sequential validation: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       break;
     }
     case PARALLEL_EXECUTION:
@@ -125,11 +133,6 @@ int main(int argc, char* argv[])
       exit(-1);
     }
   }
-	
-	categoryNames_size = nbClassifier.getCategoryCount();
-	categoryNames = new string[categoryNames_size];
-	nbClassifier.getCategoryNames(categoryNames);
-  Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
   //Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER);
   delete [] categoryNames;
   

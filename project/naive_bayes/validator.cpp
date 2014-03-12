@@ -34,61 +34,61 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 	cout << dataset << " 	" << classifier << endl;
 	this->dataset = dataset;
 	this->classifier = classifier;
-	validate(dataset, classifier);
-	f_measure(categoryNames, n);
+	string test_set_classified_name = "test_set_classified";
+	std::string classified_name;
+	
+	// what is the dataset?
+	switch(dataset){
+		case NEWS_20:
+			classified_name = NEWS_20_NAME;
+			break;
+		case REUTERS:
+			classified_name = REUTERS_NAME;
+			break;
+		case ENRON:
+			classified_name = ENRON_NAME;
+			break;
+		default:
+			cout << "f-measure:: can't recognize the dataset name" << endl;
+			break;
+	}
+	
+	test_set_classified_name = classified_name + "test_set_classified";
+	cout << "test_set_classified_name: " << test_set_classified_name << endl;
+	
+	// what is the classifier we are validating?
+	switch(classifier){
+		case NAIVE_BAYES_CLASSIFIER:
+			classified_name += NAIVE_BAYES_FILE_NAME;
+			break;
+		case N_GRAM_CLASSIFIER:
+			classified_name += N_GRAM_FILE_NAME;
+			break;
+		default:
+			cout << "f-measure:: can't recognize the classifier" << endl;
+			break;
+	}
+	
+	validate(classified_name, test_set_classified_name);
+	f_measure(classified_name, test_set_classified_name, categoryNames, n);	
 }
 
 
 /* method goes to the dataset directory and compares
  * the values from the given classifier and real values */
-void Validator::validate(int dataset, int classifier)
+void Validator::validate(string classified_name, string test_set_classified_name)
 {
   double F_measure = 0;
   double precission = 0;
   double recall = 0;
   int correct = 0;
   int incorrect = 0;
-  string test_set_classified_name = "test_set_classified";
-  std::string classified_name;
   // true values from the test set
   unordered_map<string, categories > test_set_classified;
   // values from our classifier
   unordered_map<string, categories > classified;
   std::unordered_map<string,categories>::iterator it;
 
-  // what is the dataset?
-    switch(dataset){
-    case NEWS_20:
-      classified_name = NEWS_20_NAME;
-      break;
-    case REUTERS:
-      classified_name = REUTERS_NAME;
-      break;
-    case ENRON:
-      classified_name = ENRON_NAME;
-      break;
-    default:
-      cout << "validate:: can't recognize the dataset name" << endl;
-      break;
-  }
-  
-  test_set_classified_name = classified_name + "test_set_classified";
-  
-  // what is the classifier we are validating?
-    switch(classifier){
-    case NAIVE_BAYES_CLASSIFIER:
-      classified_name += NAIVE_BAYES_FILE_NAME;
-      break;
-    case N_GRAM_CLASSIFIER:
-      classified_name += N_GRAM_FILE_NAME;
-      break;
-    default:
-      cout << "validate:: can't recognize the classifier" << endl;
-      break;
-  }
-  
-  // TODO move those reads to a separate method.
-  
   // read results we got
   ifstream inputFile (classified_name);
   if (!inputFile)
@@ -175,14 +175,12 @@ void Validator::validate(int dataset, int classifier)
 }
 
 
-void Validator::f_measure(string* categoryNames, int n)
+void Validator::f_measure(string classified_name, string test_set_classified_name,string* categoryNames, int n)
 {	
 	cout << "Validator00::f_measure()" << endl;
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
-	string test_set_classified_name = "test_set_classified";
-	std::string classified_name;
 	// true values from the test set
 	unordered_map<string, string> test_set_classified;
 	// values from our classifier
@@ -204,40 +202,6 @@ void Validator::f_measure(string* categoryNames, int n)
 	for(int i = 0; i < n; ++i)
 	{
 		confussionM [i] = new int[n];
-	}
-	
-	// TODO move all this to constructor
-	
-	// what is the dataset?
-	switch(dataset){
-		case NEWS_20:
-			classified_name = NEWS_20_NAME;
-			break;
-		case REUTERS:
-			classified_name = REUTERS_NAME;
-			break;
-		case ENRON:
-			classified_name = ENRON_NAME;
-			break;
-		default:
-			cout << "f-measure:: can't recognize the dataset name" << endl;
-			break;
-	}
-	
-	test_set_classified_name = classified_name + "test_set_classified";
-	cout << "test_set_classified_name: " << test_set_classified_name << endl;
-	
-	// what is the classifier we are validating?
-	switch(classifier){
-		case NAIVE_BAYES_CLASSIFIER:
-			classified_name += NAIVE_BAYES_FILE_NAME;
-			break;
-		case N_GRAM_CLASSIFIER:
-			classified_name += N_GRAM_FILE_NAME;
-			break;
-		default:
-			cout << "f-measure:: can't recognize the classifier" << endl;
-			break;
 	}
 	// TODO CILK_SPAWN for those two:
 	// read results we got
@@ -278,7 +242,7 @@ void Validator::f_measure(string* categoryNames, int n)
 		confussionM[i][j] +=1;
 	}
 	
-	//printMatrix(confussionM, n);
+	printMatrix(confussionM, n);
 	
 	// compute recall
 	double* temp = new double[n];
@@ -294,6 +258,150 @@ void Validator::f_measure(string* categoryNames, int n)
 		}
 	}
 
+	double* sum_cji_for_all_j = new double[n];
+	// first index iterates	
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			sum_cji_for_all_j[i] += confussionM[j][i];
+		}
+	}
+	
+	for (int i = 0; i < n; i++)
+	{
+		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
+	}
+	// print recall per category:
+	cout << "recall per category:" << endl;
+	for (int i = 0; i < n; i++)
+	{
+		cout << recall[i] << endl;
+	}
+	
+	// compute precision
+	for (int i = 0; i < n; i++)
+	{
+		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
+	}
+	// print precission per category:
+	cout << "precission per category:" << endl;
+	for (int i = 0; i < n; i++)
+	{
+		cout << precission[i] << endl;
+	}
+	
+	double all_sum = 0;
+	
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			all_sum += confussionM[i][j];
+		}
+	}
+	double all_ii = 0;
+	
+	for (int i = 0; i < n; i++)
+	{
+		all_ii += confussionM[i][i];
+	}	
+	
+	accurancy = all_ii / all_sum;
+	
+	cout << "accurancy: " << accurancy << endl;
+	
+	// deallocate the matrix
+	for (int i = 0; i < n; i++)
+	{
+		delete [] confussionM[i];
+	}	
+	delete [] confussionM;
+}
+
+void Validator::f_measure_parallel(string classified_name, string test_set_classified_name,string* categoryNames, int n)
+{	
+	cout << "Validator00::f_measure()" << endl;
+	int correct = 0;
+	int incorrect = 0;
+	// results in files with names:
+	// true values from the test set
+	unordered_map<string, string> test_set_classified;
+	// values from our classifier
+	unordered_map<string, string> classified;
+	std::unordered_map<string,string>::iterator it;
+	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
+	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
+	int dataset = this->dataset;
+	int classifier = this->classifier;
+	std::map <std::string, int> indeces;
+	// confussion matrix
+	int** confussionM  = new int*[n];
+	double* recall = new double[n];
+	double* precission = new double[n];
+	double F_Measure = 0;
+	double accurancy = 0;
+	
+	// allocate confussion matrix
+	for(int i = 0; i < n; ++i)
+	{
+		confussionM [i] = new int[n];
+	}
+	// TODO CILK_SPAWN for those two:
+	// read results we got
+	readCategorizedData(classified_name, classified);
+	// read the true values
+	readCategorizedData(test_set_classified_name, test_set_classified);
+	// docId, <true_cat, classified_cat>
+	// TODO test for all kinds of exceptions!!!!
+	// TODO CILK_FOR
+	for (it=classified.begin(); it!=classified.end(); ++it){
+		// docId is a string
+		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
+		confussion[it->first] = std::make_pair(test_set_classified[it->first], it->second);
+		string s = it->first;
+	}
+	
+	// initialize confussion matrix to zeros
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < n; j++)
+		{
+			confussionM[i][j] = 0;
+		}
+	}
+	
+	/*
+	 *	 Build a map that will give us an index - int for each category name
+	 *	 this way we can store the whole matrix as a simple in[][] matrix.
+	 */
+	for (int index = 0; index < n; index++)
+	{
+		indeces[categoryNames[index]] = index;
+	}
+	//TODO EXCEPTIONS!! check for not existing stuff
+	for (itt=confussion.begin(); itt!=confussion.end(); ++itt){
+		std::pair<std::string, std::string> cats1 = itt->second;
+		int i = indeces[cats1.first];	
+		int j = indeces[cats1.second];
+		confussionM[i][j] +=1;
+	}
+	
+	//printMatrix(confussionM, n);
+	
+	// compute recall
+	double* temp = new double[n];
+	
+	double* sum_cij_for_all_j = new double[n];
+	
+	// second index iterates
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			sum_cij_for_all_j[i] += confussionM[i][j];
+		}
+	}
+	
 	double* sum_cji_for_all_j = new double[n];
 	// first index iterates	
 	for (int i = 0; i < n; i++)
@@ -342,6 +450,7 @@ void Validator::f_measure(string* categoryNames, int n)
 	}	
 	delete [] confussionM;
 }
+
 
 void Validator::readCategorizedData(string fileName, unordered_map<string, string> &classified)
 {
