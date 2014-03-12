@@ -34,7 +34,7 @@ using namespace std;
 void printUsageAndExit()
 {
   cout << "Expected usage:" << endl;
-  cout << "\t./naivebayes [datasetNumber] [executionType]" << endl;
+  cout << "\t./naivebayes [datasetNumber] [executionType] [number of processors]" << endl;
   cout << "Supported datasetNumber values:" << endl;
   cout << "\t" << NEWS_20 << " : 20 News Groups" << endl;
   cout << "\t" << REUTERS << " : Reuters" << endl;
@@ -47,13 +47,15 @@ void printUsageAndExit()
 
 int main(int argc, char* argv[])
 {
-  if (argc != 3)
+  if (argc != 4)
     printUsageAndExit();
   // Select the dataset
   int datasetNumber = atoi(argv[1]);
   string datasetName, testSetSeparator;
   string* categoryNames;
   int categoryNames_size;
+	// number of processors
+	int p = atoi(argv[3]);
 
   switch(datasetNumber){
     case NEWS_20:
@@ -95,7 +97,7 @@ int main(int argc, char* argv[])
       cout << "Elapsed time for sequential classification: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       // How about a whole test set
       start = clock();
-      nbClassifier.classifyTestSetParallel(datasetName, testSetSeparator);
+      nbClassifier.classifyTestSet(datasetName, testSetSeparator);
       runTime = clock() - start;
       cout << "Elapsed time for sequential classification of entire test set: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       break;
