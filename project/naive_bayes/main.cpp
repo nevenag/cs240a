@@ -116,6 +116,10 @@ int main(int argc, char* argv[])
 			validate.f_measure_parallel(docClassifications);
 			runTime = clock() - start;
 			cout << "Elapsed time for parallel validation: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
+			start = clock();
+			validate.f_measure(docClassifications);
+			runTime = clock() - start;
+			cout << "Elapsed time for parallel validation: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       break;
     }
     case PARALLEL_EXECUTION:

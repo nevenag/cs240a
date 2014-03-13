@@ -188,12 +188,6 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 	std::unordered_map<string,string>::iterator it;
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
 	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
-	int dataset = this->dataset;
-	int classifier = this->classifier;
-	string test_set_classified_name = this->test_set_classified_name;
-	int n = this->n;
-	string* categoryNames = this->categoryNames;
-	string classified_name = this->classified_name;
 	
 	std::map <std::string, int> indeces;
 	// confussion matrix
