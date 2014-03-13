@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
       typedef unordered_map<string, string>::iterator it_type;
       for (it_type it = docClassifications.begin(); it != docClassifications.end(); it++)
       {
-        cout << "\t" << it->first << " " << it->second << endl;
+        //cout << "\t" << it->first << " " << it->second << endl;
       }
       // Validator stuff
 			categoryNames_size = nbClassifier.getCategoryCount();
@@ -112,8 +112,10 @@ int main(int argc, char* argv[])
 			nbClassifier.getCategoryNames(categoryNames);
 			start = clock();
 			Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
+				//validate.f_measure();
+			validate.f_measure_parallel(docClassifications);
 			runTime = clock() - start;
-			cout << "Elapsed time for sequential validation: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
+			cout << "Elapsed time for parallel validation: " << (double)runTime/CLOCKS_PER_SEC << " seconds" << endl;
       break;
     }
     case PARALLEL_EXECUTION:

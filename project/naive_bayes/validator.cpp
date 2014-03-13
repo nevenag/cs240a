@@ -6,6 +6,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <cilk/cilk.h>
+#include <cilk/reducer_opadd.h>
 
 #include "naive_bayes.hpp"
 #include "validator.hpp"
@@ -34,7 +36,8 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 	cout << dataset << " 	" << classifier << endl;
 	this->dataset = dataset;
 	this->classifier = classifier;
-	string test_set_classified_name = "test_set_classified";
+	this->categoryNames = categoryNames;
+	test_set_classified_name = "test_set_classified";
 	std::string classified_name;
 	
 	// what is the dataset?
@@ -68,16 +71,13 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 			cout << "f-measure:: can't recognize the classifier" << endl;
 			break;
 	}
-	
-	validate(classified_name, test_set_classified_name);
-	f_measure(classified_name, test_set_classified_name, categoryNames, n);	
 }
 
 
 /* method goes to the dataset directory and compares
  * the values from the given classifier and real values */
-void Validator::validate(string classified_name, string test_set_classified_name)
-{
+void Validator::validate(unordered_map<string, string> &classified)
+{/*
   double F_measure = 0;
   double precission = 0;
   double recall = 0;
@@ -170,26 +170,31 @@ void Validator::validate(string classified_name, string test_set_classified_name
 	}
 	cout << "correctly classified: " << correct << endl;
 	cout << "incorrectly classified: " << incorrect << endl; 
-	
+	*/
 	
 }
 
 
-void Validator::f_measure(string classified_name, string test_set_classified_name,string* categoryNames, int n)
+void Validator::f_measure(unordered_map<string, string> &classified)
 {	
-	cout << "Validator00::f_measure()" << endl;
+	cout << "Validator::f_measure()" << endl;
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
 	// true values from the test set
 	unordered_map<string, string> test_set_classified;
 	// values from our classifier
-	unordered_map<string, string> classified;
+	//unordered_map<string, string> classified;
 	std::unordered_map<string,string>::iterator it;
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
 	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
 	int dataset = this->dataset;
 	int classifier = this->classifier;
+	string test_set_classified_name = this->test_set_classified_name;
+	int n = this->n;
+	string* categoryNames = this->categoryNames;
+	string classified_name = this->classified_name;
+	
 	std::map <std::string, int> indeces;
 	// confussion matrix
 	int** confussionM  = new int*[n];
@@ -205,7 +210,7 @@ void Validator::f_measure(string classified_name, string test_set_classified_nam
 	}
 	// TODO CILK_SPAWN for those two:
 	// read results we got
-	readCategorizedData(classified_name, classified);
+	//readCategorizedData(classified_name, classified);
 	// read the true values
 	readCategorizedData(test_set_classified_name, test_set_classified);
 	// docId, <true_cat, classified_cat>
@@ -242,7 +247,7 @@ void Validator::f_measure(string classified_name, string test_set_classified_nam
 		confussionM[i][j] +=1;
 	}
 	
-	printMatrix(confussionM, n);
+	//printMatrix(confussionM, n);
 	
 	// compute recall
 	double* temp = new double[n];
@@ -273,11 +278,11 @@ void Validator::f_measure(string classified_name, string test_set_classified_nam
 		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
 	}
 	// print recall per category:
-	cout << "recall per category:" << endl;
-	for (int i = 0; i < n; i++)
-	{
-		cout << recall[i] << endl;
-	}
+	//cout << "recall per category:" << endl;
+	//for (int i = 0; i < n; i++)
+	//{
+	//	cout << recall[i] << endl;
+	//}
 	
 	// compute precision
 	for (int i = 0; i < n; i++)
@@ -285,11 +290,11 @@ void Validator::f_measure(string classified_name, string test_set_classified_nam
 		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
 	}
 	// print precission per category:
-	cout << "precission per category:" << endl;
-	for (int i = 0; i < n; i++)
-	{
-		cout << precission[i] << endl;
-	}
+	//cout << "precission per category:" << endl;
+	//for (int i = 0; i < n; i++)
+	//{
+	//	cout << precission[i] << endl;
+	//}
 	
 	double all_sum = 0;
 	
@@ -319,21 +324,23 @@ void Validator::f_measure(string classified_name, string test_set_classified_nam
 	delete [] confussionM;
 }
 
-void Validator::f_measure_parallel(string classified_name, string test_set_classified_name,string* categoryNames, int n)
+void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 {	
-	cout << "Validator00::f_measure()" << endl;
+	cout << "Validator::f_measure_parallel()" << endl;
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
 	// true values from the test set
 	unordered_map<string, string> test_set_classified;
 	// values from our classifier
-	unordered_map<string, string> classified;
 	std::unordered_map<string,string>::iterator it;
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
 	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
-	int dataset = this->dataset;
-	int classifier = this->classifier;
+	//int dataset = this->dataset;
+	//int classifier = this->classifier;
+	//string test_set_classified_name = this->test_set_classified_name;
+	//int n = this->n;
+	//string* categoryNames = this->categoryNames;
 	std::map <std::string, int> indeces;
 	// confussion matrix
 	int** confussionM  = new int*[n];
@@ -343,48 +350,51 @@ void Validator::f_measure_parallel(string classified_name, string test_set_class
 	double accurancy = 0;
 	
 	// allocate confussion matrix
-	for(int i = 0; i < n; ++i)
+	cilk_for(int i = 0; i < n; ++i)
 	{
 		confussionM [i] = new int[n];
 	}
 	// TODO CILK_SPAWN for those two:
-	// read results we got
-	readCategorizedData(classified_name, classified);
-	// read the true values
+	// results we got are now passed as argument
+	// read the true 
+	cout << "test_set_classified_name" << test_set_classified_name << endl;
 	readCategorizedData(test_set_classified_name, test_set_classified);
 	// docId, <true_cat, classified_cat>
 	// TODO test for all kinds of exceptions!!!!
-	// TODO CILK_FOR
+	//cout << "read cat.data" << endl;
 	for (it=classified.begin(); it!=classified.end(); ++it){
 		// docId is a string
 		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
 		confussion[it->first] = std::make_pair(test_set_classified[it->first], it->second);
-		string s = it->first;
 	}
-	
+	//cout << "read classified data" << endl;
 	// initialize confussion matrix to zeros
-	for (int i = 0; i < n; i++){
+	cilk_for (int i = 0; i < n; i++){
 		for (int j = 0; j < n; j++)
 		{
 			confussionM[i][j] = 0;
 		}
 	}
-	
+	//cout << "confussionM" << endl;
 	/*
 	 *	 Build a map that will give us an index - int for each category name
 	 *	 this way we can store the whole matrix as a simple in[][] matrix.
 	 */
-	for (int index = 0; index < n; index++)
+	// TODO cilk
+	//cout << "index and n: " << n <<  endl;
+	cilk_for (int index = 0; index < n; index++)
 	{
 		indeces[categoryNames[index]] = index;
 	}
 	//TODO EXCEPTIONS!! check for not existing stuff
+	//cout << "confussion.begin" << endl;
 	for (itt=confussion.begin(); itt!=confussion.end(); ++itt){
 		std::pair<std::string, std::string> cats1 = itt->second;
 		int i = indeces[cats1.first];	
 		int j = indeces[cats1.second];
 		confussionM[i][j] +=1;
 	}
+	//cout << "confussion.end" << endl;
 	
 	//printMatrix(confussionM, n);
 	
@@ -394,34 +404,38 @@ void Validator::f_measure_parallel(string classified_name, string test_set_class
 	double* sum_cij_for_all_j = new double[n];
 	
 	// second index iterates
-	for (int i = 0; i < n; i++)
+	// TODO cilk
+	cilk_for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
 		{
 			sum_cij_for_all_j[i] += confussionM[i][j];
 		}
 	}
-	
+	//cout << "before first index" << endl;
 	double* sum_cji_for_all_j = new double[n];
 	// first index iterates	
-	for (int i = 0; i < n; i++)
+	// TODO cilk
+	cilk_for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
 		{
 			sum_cji_for_all_j[i] += confussionM[j][i];
 		}
 	}
-	
-	for (int i = 0; i < n; i++)
+	// TODO cilk
+	cilk_for (int i = 0; i < n; i++)
 	{
 		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
 	}
 	
 	// compute precision
-	for (int i = 0; i < n; i++)
+	// TODO cilk
+	cilk_for (int i = 0; i < n; i++)
 	{
 		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
 	}
+	//cout << "before all sum" << endl;
 	
 	double all_sum = 0;
 	
@@ -486,9 +500,8 @@ void Validator::printMatrix(int** matrix, int n)
 	for (int i = 0; i < n; i++){
 		for (int j = 0; j < n; j++)
 		{
-			cout << matrix[i][j];	
-			cout << " ";
+			printf("%6d",matrix[i][j]);
 		}
 		cout << endl;
-	}
 }
+	}
