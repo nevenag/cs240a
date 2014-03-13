@@ -9,7 +9,7 @@ class CategoryProbabilities
 {
   public:
     // Constructors
-    CategoryProbabilities(std::string,std::string*,int);
+    CategoryProbabilities(std::string,int);
     CategoryProbabilities(std::string);
     // Getters
     std::string getCategoryName() { return categoryName; };
@@ -27,6 +27,8 @@ class CategoryProbabilities
     double categoryPriorProbability;
     // Count of all documents in this category
     int docCount;
+    //
+    int vocabSize;
     // all P(w_i | C_j) terms stored in a hash map where
     // the key is w_i and the value is P(w_i | C_j)
     std::unordered_map <std::string, double> wordLikelihoodProbabilities;

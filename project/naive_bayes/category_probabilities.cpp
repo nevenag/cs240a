@@ -1,3 +1,4 @@
+#include <iostream>
 #include "category_probabilities.hpp"
 
 #define SCALING_FACTOR 10000.0
@@ -7,19 +8,17 @@ using namespace std;
 
 // Constructors
 
-CategoryProbabilities::CategoryProbabilities(string cName, string *vocabulary, int vocabSize)
+CategoryProbabilities::CategoryProbabilities(string cName, int vocabSize)
 {
   categoryName = cName;
-  // Initialize all probabilities to 0
-  for (int i = 0; i < vocabSize; i++)
-  {
-    wordLikelihoodProbabilities[vocabulary[i]] = 0.0;
-  }
+  this->vocabSize = vocabSize;
+  cout << "Using vocab size of: " << vocabSize << endl;
 }
 
 CategoryProbabilities::CategoryProbabilities(string cName)
 {
     categoryName = cName;
+    vocabSize = 0;
 }
 
 // Getters
@@ -51,7 +50,7 @@ void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, in
 {
     this->docCount = docCount;
     // Vocab size + 1 for unknown word
-    int vocabSize = wordCounts.size() + 1;
+    int vocabSize = /*this->vocabSize == 0 ? */wordCounts.size() + 1;// : this->vocabSize;
     typedef unordered_map<string, int>::iterator it_type;
     for (it_type iterator = wordCounts.begin(); iterator != wordCounts.end(); iterator++)
     {

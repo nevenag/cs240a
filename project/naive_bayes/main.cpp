@@ -83,6 +83,11 @@ int main(int argc, char* argv[])
   {
     case SEQUENTIAL_EXECUTION:
     {
+      if (datasetNumber == REUTERS)
+      {
+        cout << "REUTERS" << endl;
+        nbClassifier = NaiveBayesClassifier(categoryNamesFile, datasetName+"vocab.txt");
+      }
       nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = clock();

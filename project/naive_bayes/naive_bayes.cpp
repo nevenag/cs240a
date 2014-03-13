@@ -31,6 +31,21 @@ NaiveBayesClassifier::NaiveBayesClassifier (string categoryFileName)
     // readInputVocabulary(vocabularyFileName, categoryNames);
 }
 
+NaiveBayesClassifier::NaiveBayesClassifier (string categoryFileName, string vocabFileName)
+{
+  // First we need to get the names of all the categories
+  categoryCount = 0;
+  string* categoryNames;
+  categoryNames = new string[MAX_NUM_CATEGORIES];
+  readInputCategories(categoryFileName, categoryNames);
+  // Then we can get the vocabulary and create the CategoryProbabilities objects
+  categoryProbabilities = new CategoryProbabilities*[categoryCount];
+  int vocabSize = readInputVocabulary(vocabFileName);
+  // Now create the CategoryProbabilities objects
+  for (int i = 0; i < categoryCount; i++)
+    categoryProbabilities[i] = new CategoryProbabilities(categoryNames[i], vocabSize);
+}
+
 // Constructor Helpers
 
 void NaiveBayesClassifier::readInputCategories(string fileName, string* categoryNames)
@@ -58,7 +73,7 @@ void NaiveBayesClassifier::readInputCategories(string fileName, string* category
     return;
 }
 
-void NaiveBayesClassifier::readInputVocabulary(string fileName, string *categoryNames)
+int NaiveBayesClassifier::readInputVocabulary(string fileName)
 {
     // Open the input file for reading
     ifstream inputFile (fileName);
@@ -80,10 +95,7 @@ void NaiveBayesClassifier::readInputVocabulary(string fileName, string *category
     }
     // All done
     inputFile.close();
-    // Now create the CategoryProbabilities objects
-    for (int i = 0; i < categoryCount; i++)
-        categoryProbabilities[i] = new CategoryProbabilities(categoryNames[i], &vocabVector[0], vocabVector.size());
-    return;
+    return vocabVector.size();
 }
 
 // Private Helpers for Learning Methods

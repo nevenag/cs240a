@@ -16,6 +16,7 @@ class NaiveBayesClassifier
   public:
     // Constructors
     NaiveBayesClassifier(std::string);
+    NaiveBayesClassifier(std::string,std::string);
     // Public Utility
     void printAllCategoryNames();
     // Learning
@@ -36,7 +37,7 @@ class NaiveBayesClassifier
     CategoryProbabilities **categoryProbabilities;
     // Private methods
     void readInputCategories(std::string,std::string*);
-    void readInputVocabulary(std::string,std::string*);
+    int readInputVocabulary(std::string);
     int learnForCategory(std::string,int);
 };
 
