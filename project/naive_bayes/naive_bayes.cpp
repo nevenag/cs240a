@@ -1,4 +1,5 @@
 #include <cilk/cilk.h>
+#include <cilktools/fake_mutex.h>
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
@@ -194,11 +195,14 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
     // Each processor keeps its own global doc count
     int *globalDocCounts = new int[numProcs]();
     // Loop through all the categories this processor is responsible for
+    cilkscreen::fake_mutex m;
     cilk_for (int j = 0; j < numProcs; j++)
     {
       for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
       {
+        m.lock();
         globalDocCounts[j] += learnForCategory(datasetName, i);
+        m.unlock();
       }
     }
     // Sum up global doc counts
@@ -213,7 +217,7 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
       for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
       {
         categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
-        cout << "Processor '" << j << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
+        // cout << "Processor '" << j << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
       }
     }
     delete [] categoryChunks;
@@ -231,105 +235,8 @@ string constructClassificationString(string docID, string categoryName)
 }
 
 // Document Classification
-/*
-  This method assumes that all test documents are placed into a single file. The results of
-   the classification are written to a file called 'naive_bayes_classified' in the form of
-   (documentID assignedCategory) pairs, one per line.
-  @param testSetFileName: The name of the single text file with all of the test documents.
-*/
-void NaiveBayesClassifier::classifyTestSet(string datasetName)
-{
-	// Open document file
-	ifstream inputFile (datasetName+"test/mega_document");
-	// Check for success
-	if (!inputFile)
-	{
-	    // Cant do anything if we dont have documents...
-	    cout << "classifyTestSet::Unable to open test set document file: " << datasetName+"test/mega_document" << endl;
-	    exit(-1);
-	}
-  unordered_map<string, string> documentClassifications;
-  // For every document, we will need to store the P(C_j|d) terms for each C_j, initialized to
-  // the prior probability, i.e. P(C_j)
-  double *classificationProbabilities = new double[categoryCount];
-  // String to hold docIDs
-  string docID = "";
-  while(inputFile)
-  {
-    // Grab one line at a time
-    string line;
-    getline(inputFile, line);
-    // Each new line is a document
-    // Get the docID, it will be the first word of the line
-    istringstream tempISS(line);
-    getline(tempISS, docID, '\t');
-    // Need to reinitialize probabilities
-    for (int i = 0; i < categoryCount; i++)
-    {
-        classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
-    }
-    // The main starting point for looping over a documents words
-    istringstream iss(line);
-    string word;
-    while (getline(iss, word, ' '))
-    {
-      // Need to figure out P(w_i|C_j) for each C_j
-      // where word == w_i
-      for (int i = 0; i < categoryCount; i++)
-      {
-          classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
-      }
-    }
-    // We just finished calculating probabilities for a document so we need to classify
-    // the document now...Need to find the max probability
-    double maximum = classificationProbabilities[0];
-    int index = 0;
-#ifdef DEBUG_2
-    cout << "Probability of category '" << categoryProbabilities[0]->getCategoryName() << "': " << maximum << endl;
-#endif
-    for (int i = 1; i < categoryCount; i++)
-    {
-#ifdef DEBUG_2
-        cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "': " << classificationProbabilities[i] << endl;
-#endif
-        if (classificationProbabilities[i] > maximum)
-        {
-            maximum = classificationProbabilities[i];
-            index = i;
-        }
-    }
-    // Now we need to store this max
-#ifdef DEBUG_2
-    cout << "About to add entry to unordered_map:" << docID << ":" << categoryProbabilities[index]->getCategoryName() << endl;
-#endif
-    documentClassifications[docID] = categoryProbabilities[index]->getCategoryName();
-    docID = "";
-  }
-}
 
-void NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
-{
-	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x05", "x07",
-													"x08", "x09", "x10", "x11", "x12", "x13", "x14", "x15"};
-
-	string outputFile = datasetName+"naive_bayes_classified";
-	// TODO check if opened
-	std::ofstream ofs;
-	ofs.open(outputFile, std::ofstream::app);
-	if (!ofs)
-	{
-		cout << "classifyTestSetParallel::Unable to open output file" << endl;
-		exit(-1);
-	}
-	
-	// cilk_for
-	for(int i = 0; i < p; i++){
-		classifyTestSet(fileNames[i]);
-	}
-		
-}
-
-unordered_map<string, string> NaiveBayesClassifier::classifyDocumentsInFile(string documentFileName)
+void NaiveBayesClassifier::classifyDocumentsInFile(string documentFileName, unordered_map<string, string> &documentClassifications)
 {
 	// Open document file
 	ifstream inputFile (documentFileName);
@@ -340,8 +247,6 @@ unordered_map<string, string> NaiveBayesClassifier::classifyDocumentsInFile(stri
     cout << "classifyDocument::Unable to open document file: " << documentFileName << endl;
     exit(-1);
 	}
-  // Store classifications in a map
-  unordered_map<string, string> documentClassifications;
   // For every document, we will need to store the P(C_j|d) terms for each C_j, initialized to
   // the prior probability, i.e. P(C_j)
   double *classificationProbabilities = new double[categoryCount];
@@ -402,8 +307,119 @@ unordered_map<string, string> NaiveBayesClassifier::classifyDocumentsInFile(stri
   // Done with the document file now
   inputFile.close();
   delete [] classificationProbabilities;
-  return documentClassifications;
 }
+
+/*
+  This method assumes that all test documents are placed into a single file. The results of
+   the classification are written to a file called 'naive_bayes_classified' in the form of
+   (documentID assignedCategory) pairs, one per line.
+  @param testSetFileName: The name of the single text file with all of the test documents.
+*/
+void NaiveBayesClassifier::classifyTestSet(string datasetName)
+{
+	// Open document file
+	ifstream inputFile (datasetName+"test/mega_document");
+	// Check for success
+	if (!inputFile)
+	{
+	    // Cant do anything if we dont have documents...
+	    cout << "classifyTestSet::Unable to open test set document file: " << datasetName+"test/mega_document" << endl;
+	    exit(-1);
+	}
+  
+}
+
+unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
+{
+	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x05", "x07",
+													"x08", "x09", "x10", "x11", "x12", "x13", "x14", "x15"};
+  if (p > 16)
+  {
+    cout << "Too many processors: " << p << endl;
+  }
+  /*vector<*/unordered_map<string, string>/*>*/ documentClassifications;
+  // for (int i = 0; i < p; i++)
+  // {
+  //   unordered_map<string, string> map;
+  //   documentClassifications.push_back(map);
+  // }
+	// cilk_for
+	cilk_for (int i = 0; i < p; i++)
+  {
+    string documentFileName = fileNames[i];
+  	// Open document file
+  	ifstream inputFile (documentFileName);
+  	// Check for success
+  	if (!inputFile)
+  	{
+      // Cant do anything if we dont have class names...
+      cout << "classifyDocument::Unable to open document file: " << documentFileName << endl;
+      exit(-1);
+  	}
+    // For every document, we will need to store the P(C_j|d) terms for each C_j, initialized to
+    // the prior probability, i.e. P(C_j)
+    double *classificationProbabilities = new double[categoryCount];
+    // String to hold docIDs
+    string docID = "";
+  	// While there's still stuff left to read...
+  	while (inputFile)
+  	{
+      // Grab one line at a time
+      string line;
+      getline(inputFile, line);
+      // Each new line is a document
+      // Get the docID, it will be the first word of the line
+      istringstream tempISS(line);
+      getline(tempISS, docID, '\t');
+      // Need to reinitialize probabilities
+      for (int i = 0; i < categoryCount; i++)
+      {
+        classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
+      }
+      // The main starting point for looping over a documents words
+      istringstream iss(line);
+      string word;
+      while (getline(iss, word, ' '))
+      {
+        // Need to figure out P(w_i|C_j) for each C_j
+        // where word == w_i
+        for (int i = 0; i < categoryCount; i++)
+        {
+          classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
+        }
+      }
+      // We just finished calculating probabilities for a document so we need to classify
+      // the document now...Need to find the max probability
+      double maximum = classificationProbabilities[0];
+      int index = 0;
+  #ifdef DEBUG_2
+      cout << "Probability of category '" << categoryProbabilities[0]->getCategoryName() << "': " << maximum << endl;
+  #endif
+      for (int i = 1; i < categoryCount; i++)
+      {
+  #ifdef DEBUG_2
+        cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "': " << classificationProbabilities[i] << endl;
+  #endif
+        if (classificationProbabilities[i] > maximum)
+        {
+          maximum = classificationProbabilities[i];
+          index = i;
+        }
+      }
+      // Now we need to store this max
+  #ifdef DEBUG_2
+      cout << "About to add entry to unordered_map:" << docID << ":" << categoryProbabilities[index]->getCategoryName() << endl;
+  #endif
+      documentClassifications[docID] = categoryProbabilities[index]->getCategoryName();
+      docID = "";
+    }
+    // Done with the document file now
+    inputFile.close();
+    delete [] classificationProbabilities;
+	}
+	return documentClassifications;
+}
+
 
 // Public Utility Methods
 

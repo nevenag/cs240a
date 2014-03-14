@@ -37,6 +37,7 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 	this->dataset = dataset;
 	this->classifier = classifier;
 	this->categoryNames = categoryNames;
+  this->n = n;
 	test_set_classified_name = "test_set_classified";
 	std::string classified_name;
 	
@@ -241,7 +242,7 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 		confussionM[i][j] +=1;
 	}
 	
-	//printMatrix(confussionM, n);
+  printMatrix(confussionM, n);
 	
 	// compute recall
 	double* temp = new double[n];
@@ -390,7 +391,7 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 	}
 	//cout << "confussion.end" << endl;
 	
-	//printMatrix(confussionM, n);
+  printMatrix(confussionM, n);
 	
 	// compute recall
 	double* temp = new double[n];
