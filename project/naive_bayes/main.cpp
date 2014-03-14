@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
       // How about categorizing the whole test set?
       start = example_get_time();
       unordered_map<string, string> docClassifications;
-      nbClassifier.classifyDocumentsInFile(datasetName+"twenty_news_groups_test.tsv", docClassifications);
+      nbClassifier.classifyDocumentsInFile(datasetName+"test/mega_document", docClassifications);
       runTime = example_get_time();
       cout << "Elapsed time for sequential classification of entire test set: " << runTime/1000.f << " seconds" << endl;
       // Print out all classifications
@@ -111,11 +111,7 @@ int main(int argc, char* argv[])
 			categoryNames_size = nbClassifier.getCategoryCount();
 			categoryNames = new string[categoryNames_size];
 			nbClassifier.getCategoryNames(categoryNames);
-      Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
-			start = example_get_time();
-			validate.f_measure_parallel(docClassifications);
-			runTime = example_get_time();
-			cout << "Elapsed time for parallel validation: " << runTime/1000.f << " seconds" << endl;
+      Validator validate(datasetNumber, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
 			start = example_get_time();
 			validate.f_measure(docClassifications);
 			runTime = example_get_time();
@@ -124,6 +120,11 @@ int main(int argc, char* argv[])
     }
     case PARALLEL_EXECUTION:
     {
+      if (datasetNumber == REUTERS)
+      {
+        cout << "REUTERS" << endl;
+        nbClassifier = NaiveBayesClassifier(categoryNamesFile, datasetName+"vocab.txt");
+      }
     	// number of processors
     	int p = atoi(argv[3]);
       // Tell cilk how many processors we want
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
       categoryNames_size = nbClassifier.getCategoryCount();
       categoryNames = new string[categoryNames_size];
       nbClassifier.getCategoryNames(categoryNames);
-      Validator validate(NEWS_20, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
+      Validator validate(datasetNumber, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
       start = example_get_time();
       validate.f_measure(docClassifications);
       runTime = example_get_time();
