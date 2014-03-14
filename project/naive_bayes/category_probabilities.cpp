@@ -23,13 +23,13 @@ CategoryProbabilities::CategoryProbabilities(string cName)
 
 // Getters
 
-double CategoryProbabilities::getProbabilityOfWord(string word)
+double CategoryProbabilities::getProbabilityOfWord(string word) const
 {
     // Either we have a probability for the word
     if (wordLikelihoodProbabilities.count(word) == 1)
     {
         // This case is easy
-        return wordLikelihoodProbabilities[word];
+        return wordLikelihoodProbabilities.find(word)->second;
     }
     // Or its an unknown word
     else

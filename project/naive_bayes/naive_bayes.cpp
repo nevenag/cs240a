@@ -12,6 +12,7 @@
 
 // #define DEBUG_1
 // #define DEBUG_2
+#define DEBUG_3
 
 using namespace std;
 
@@ -307,6 +308,9 @@ void NaiveBayesClassifier::classifyDocumentsInFile(string documentFileName, unor
   // Done with the document file now
   inputFile.close();
   delete [] classificationProbabilities;
+#ifdef DEBUG_3
+  cout << "Classified " << documentClassifications.size() << " number of documents" << endl;
+#endif
 }
 
 /*
@@ -331,93 +335,35 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName)
 
 unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
 {
-	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x05", "x07",
+	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x06", "x07",
 													"x08", "x09", "x10", "x11", "x12", "x13", "x14", "x15"};
   if (p > 16)
   {
     cout << "Too many processors: " << p << endl;
   }
-  /*vector<*/unordered_map<string, string>/*>*/ documentClassifications;
-  // for (int i = 0; i < p; i++)
-  // {
-  //   unordered_map<string, string> map;
-  //   documentClassifications.push_back(map);
-  // }
+  vector <unordered_map<string, string> > documentClassifications;
+  for (int i = 0; i < p; i++)
+  {
+    unordered_map<string, string> map;
+    documentClassifications.push_back(map);
+  }
 	// cilk_for
 	cilk_for (int i = 0; i < p; i++)
   {
-    string documentFileName = fileNames[i];
-  	// Open document file
-  	ifstream inputFile (documentFileName);
-  	// Check for success
-  	if (!inputFile)
-  	{
-      // Cant do anything if we dont have class names...
-      cout << "classifyDocument::Unable to open document file: " << documentFileName << endl;
-      exit(-1);
-  	}
-    // For every document, we will need to store the P(C_j|d) terms for each C_j, initialized to
-    // the prior probability, i.e. P(C_j)
-    double *classificationProbabilities = new double[categoryCount];
-    // String to hold docIDs
-    string docID = "";
-  	// While there's still stuff left to read...
-  	while (inputFile)
-  	{
-      // Grab one line at a time
-      string line;
-      getline(inputFile, line);
-      // Each new line is a document
-      // Get the docID, it will be the first word of the line
-      istringstream tempISS(line);
-      getline(tempISS, docID, '\t');
-      // Need to reinitialize probabilities
-      for (int i = 0; i < categoryCount; i++)
-      {
-        classificationProbabilities[i] = categoryProbabilities[i]->getCategoryPriorProbability();
-      }
-      // The main starting point for looping over a documents words
-      istringstream iss(line);
-      string word;
-      while (getline(iss, word, ' '))
-      {
-        // Need to figure out P(w_i|C_j) for each C_j
-        // where word == w_i
-        for (int i = 0; i < categoryCount; i++)
-        {
-          classificationProbabilities[i] += categoryProbabilities[i]->getProbabilityOfWord(word);
-        }
-      }
-      // We just finished calculating probabilities for a document so we need to classify
-      // the document now...Need to find the max probability
-      double maximum = classificationProbabilities[0];
-      int index = 0;
-  #ifdef DEBUG_2
-      cout << "Probability of category '" << categoryProbabilities[0]->getCategoryName() << "': " << maximum << endl;
-  #endif
-      for (int i = 1; i < categoryCount; i++)
-      {
-  #ifdef DEBUG_2
-        cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "': " << classificationProbabilities[i] << endl;
-  #endif
-        if (classificationProbabilities[i] > maximum)
-        {
-          maximum = classificationProbabilities[i];
-          index = i;
-        }
-      }
-      // Now we need to store this max
-  #ifdef DEBUG_2
-      cout << "About to add entry to unordered_map:" << docID << ":" << categoryProbabilities[index]->getCategoryName() << endl;
-  #endif
-      documentClassifications[docID] = categoryProbabilities[index]->getCategoryName();
-      docID = "";
-    }
-    // Done with the document file now
-    inputFile.close();
-    delete [] classificationProbabilities;
+		classifyDocumentsInFile(fileNames[i], documentClassifications[i]);
 	}
-	return documentClassifications;
+  for (int i = 1; i < p; i++)
+  {
+#ifdef DEBUG_3
+  cout << "documentClassifications[0].size() = " << documentClassifications[0].size() << endl;
+  cout << "documentClassifications[i].size() = " << documentClassifications[i].size() << endl;
+#endif
+    documentClassifications[0].insert(documentClassifications[i].begin(), documentClassifications[i].end());
+  }
+#ifdef DEBUG_3
+  cout << "Classified " << documentClassifications[0].size() << " number of documents" << endl;
+#endif
+	return documentClassifications[0];
 }
 
 

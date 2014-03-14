@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
       // How about categorizing the whole test set?
       start = example_get_time();
       unordered_map<string, string> docClassifications;
-      nbClassifier.classifyDocumentsInFile(datasetName+"test/mega_document", docClassifications);
+      nbClassifier.classifyDocumentsInFile(datasetName+"twenty_news_groups_test.tsv", docClassifications);
       runTime = example_get_time();
       cout << "Elapsed time for sequential classification of entire test set: " << runTime/1000.f << " seconds" << endl;
       // Print out all classifications

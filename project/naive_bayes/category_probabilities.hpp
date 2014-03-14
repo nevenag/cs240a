@@ -12,10 +12,10 @@ class CategoryProbabilities
     CategoryProbabilities(std::string,int);
     CategoryProbabilities(std::string);
     // Getters
-    std::string getCategoryName() { return categoryName; };
-    double getCategoryPriorProbability() { return categoryPriorProbability; };
-    double getProbabilityOfWord(std::string);
-    int getDocCount() { return docCount; };
+    std::string getCategoryName() const { return categoryName; };
+    double getCategoryPriorProbability() const { return categoryPriorProbability; };
+    double getProbabilityOfWord(std::string) const;
+    int getDocCount() const { return docCount; };
     // Setters
     void setProbabilitiesWithCounts(std::unordered_map<std::string,int>,double,int);
     void setPriorProbabilityWithTotalDocCount(int);
