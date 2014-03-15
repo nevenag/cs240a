@@ -12,7 +12,7 @@ CategoryProbabilities::CategoryProbabilities(string cName, int vocabSize)
 {
   categoryName = cName;
   this->vocabSize = vocabSize;
-  cout << "Using vocab size of: " << vocabSize << endl;
+  // cout << "Using vocab size of: " << vocabSize << endl;
 }
 
 CategoryProbabilities::CategoryProbabilities(string cName)
@@ -50,7 +50,7 @@ void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, in
 {
     this->docCount = docCount;
     // Vocab size + 1 for unknown word
-    int vocabSize = /*this->vocabSize == 0 ? */wordCounts.size() + 1;// : this->vocabSize;
+    int vocabSize = this->vocabSize == 0 ? wordCounts.size() + 1 : this->vocabSize;
     typedef unordered_map<string, int>::iterator it_type;
     for (it_type iterator = wordCounts.begin(); iterator != wordCounts.end(); iterator++)
     {

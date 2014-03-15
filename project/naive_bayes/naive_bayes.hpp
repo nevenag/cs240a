@@ -17,6 +17,8 @@ class NaiveBayesClassifier
     // Constructors
     NaiveBayesClassifier(std::string);
     NaiveBayesClassifier(std::string,std::string);
+    // Destructor
+    ~NaiveBayesClassifier();
     // Public Utility
     void printAllCategoryNames();
     // Learning

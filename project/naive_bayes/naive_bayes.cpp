@@ -1,5 +1,5 @@
 #include <cilk/cilk.h>
-#include <cilktools/fake_mutex.h>
+// #include <cilktools/fake_mutex.h>
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
@@ -12,9 +12,18 @@
 
 // #define DEBUG_1
 // #define DEBUG_2
-#define DEBUG_3
+// #define DEBUG_3
 
 using namespace std;
+
+// Destructor
+
+NaiveBayesClassifier::~NaiveBayesClassifier()
+{
+  for (int i = 0; i < categoryCount; i++)
+    delete categoryProbabilities[i];
+  delete [] categoryProbabilities;
+}
 
 // Constructors
 
@@ -196,14 +205,14 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
     // Each processor keeps its own global doc count
     int *globalDocCounts = new int[numProcs]();
     // Loop through all the categories this processor is responsible for
-    cilkscreen::fake_mutex m;
+    // cilkscreen::fake_mutex m;
     cilk_for (int j = 0; j < numProcs; j++)
     {
       for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
       {
-        m.lock();
+        // m.lock();
         globalDocCounts[j] += learnForCategory(datasetName, i);
-        m.unlock();
+        // m.unlock();
       }
     }
     // Sum up global doc counts
@@ -341,13 +350,13 @@ unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(stri
   {
     cout << "Too many processors: " << p << endl;
   }
-  vector <unordered_map<string, string> > documentClassifications;
+  vector< unordered_map<string, string> > documentClassifications;
   for (int i = 0; i < p; i++)
   {
     unordered_map<string, string> map;
     documentClassifications.push_back(map);
   }
-	// cilk_for
+  // cilk_for
 	cilk_for (int i = 0; i < p; i++)
   {
 		classifyDocumentsInFile(fileNames[i], documentClassifications[i]);
@@ -361,7 +370,7 @@ unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(stri
     documentClassifications[0].insert(documentClassifications[i].begin(), documentClassifications[i].end());
   }
 #ifdef DEBUG_3
-  cout << "Classified " << documentClassifications[0].size() << " number of documents" << endl;
+  cout << "Parallel:Classified " << documentClassifications[0].size() << " number of documents" << endl;
 #endif
 	return documentClassifications[0];
 }
