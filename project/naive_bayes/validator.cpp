@@ -242,7 +242,7 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 		confussionM[i][j] +=1;
 	}
 	
-  printMatrix(confussionM, n);
+  // printMatrix(confussionM, n);
 	
 	// compute recall
 	double* temp = new double[n];
