@@ -56,19 +56,22 @@ int main(int argc, char* argv[])
   if (executionNumber == PARALLEL_EXECUTION && argc != 4)
     printUsageAndExit();
   //
-  string datasetName;
+  string datasetName, vocabFileName;
   string* categoryNames;
   int categoryNames_size;
 	//
   switch(datasetNumber){
     case NEWS_20:
       datasetName = NEWS_20_NAME;
+      vocabFileName = "";
       break;
     case REUTERS:
       datasetName = REUTERS_NAME;
+      vocabFileName = "reuters/vocab.txt";
       break;
     case ENRON:
       datasetName = ENRON_NAME;
+      vocabFileName = "";
       break;
     default:
       cout << "main:: not able to select dataset" << endl;
@@ -76,29 +79,23 @@ int main(int argc, char* argv[])
   }
   // Initialize the NB Classifier
   string categoryNamesFile = datasetName + "category_names.txt";
-  NaiveBayesClassifier nbClassifier(categoryNamesFile);
-
+  NaiveBayesClassifier nbClassifier(categoryNamesFile, vocabFileName);
   long start, runTime;
   switch (executionNumber)
   {
     case SEQUENTIAL_EXECUTION:
     {
-      if (datasetNumber == REUTERS)
-      {
-        cout << "REUTERS" << endl;
-        nbClassifier = NaiveBayesClassifier(categoryNamesFile, datasetName+"vocab.txt");
-      }
       nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = example_get_time();
       nbClassifier.learnFromTrainingSet(datasetName);
-      runTime = example_get_time();
+      runTime = example_get_time() - start;
       cout << "Elapsed time for sequential learning: " << runTime/1000.f << " seconds" << endl;
       // How about categorizing the whole test set?
       start = example_get_time();
       unordered_map<string, string> docClassifications;
       nbClassifier.classifyDocumentsInFile(datasetName+"test/mega_document", docClassifications);
-      runTime = example_get_time();
+      runTime = example_get_time() - start;
       cout << "Elapsed time for sequential classification of entire test set: " << runTime/1000.f << " seconds" << endl;
       // Print out all classifications
       // cout << "Document Classifications:" << endl;
@@ -114,17 +111,12 @@ int main(int argc, char* argv[])
       Validator validate(datasetNumber, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
 			start = example_get_time();
 			validate.f_measure(docClassifications);
-			runTime = example_get_time();
+			runTime = example_get_time() - start;
 			cout << "Elapsed time for sequential validation: " << runTime/1000.f << " seconds" << endl;
       break;
     }
     case PARALLEL_EXECUTION:
     {
-      if (datasetNumber == REUTERS)
-      {
-        cout << "REUTERS" << endl;
-        nbClassifier = NaiveBayesClassifier(categoryNamesFile, datasetName+"vocab.txt");
-      }
     	// number of processors
     	int p = atoi(argv[3]);
       // Tell cilk how many processors we want
@@ -133,12 +125,12 @@ int main(int argc, char* argv[])
       // How long does the training phase take?
       start = example_get_time();
       nbClassifier.learnFromTrainingSetParallel(datasetName, p);
-      runTime = example_get_time();
+      runTime = example_get_time() - start;
       cout << "Elapsed time for parallel learning: " << runTime/1000.f << " seconds" << endl;
       // How about categorizing the whole test set?
       start = example_get_time();
       unordered_map<string, string> docClassifications = nbClassifier.classifyTestSetParallel(datasetName+"test/mega_document", p);
-      runTime = example_get_time();
+      runTime = example_get_time() - start;
       cout << "Elapsed time for parallel classification of entire test set: " << runTime/1000.f << " seconds" << endl;
       // Print out all classifications
       // cout << "Document Classifications:" << endl;
@@ -153,7 +145,7 @@ int main(int argc, char* argv[])
       Validator validate(datasetNumber, NAIVE_BAYES_CLASSIFIER, categoryNames, categoryNames_size);
       start = example_get_time();
       validate.f_measure(docClassifications);
-      runTime = example_get_time();
+      runTime = example_get_time() - start;
       break;
     }
     default:

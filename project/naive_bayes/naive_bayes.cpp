@@ -29,30 +29,29 @@ NaiveBayesClassifier::~NaiveBayesClassifier()
 
 NaiveBayesClassifier::NaiveBayesClassifier (string categoryFileName)
 {
-    // First we need to get the names of all the categories
-    categoryCount = 0;
-    string* categoryNames;
-    categoryNames = new string[MAX_NUM_CATEGORIES];
-    readInputCategories(categoryFileName, categoryNames);
-    // Then we can get the vocabulary and create the CategoryProbabilities objects
-    categoryProbabilities = new CategoryProbabilities*[categoryCount];
-    // Now create the CategoryProbabilities objects
-    for (int i = 0; i < categoryCount; i++)
-        categoryProbabilities[i] = new CategoryProbabilities(categoryNames[i]);
-    // readInputVocabulary(vocabularyFileName, categoryNames);
+  NaiveBayesClassifier(categoryFileName, "");
 }
 
 NaiveBayesClassifier::NaiveBayesClassifier (string categoryFileName, string vocabFileName)
 {
+  // Check for vocab file
+  int vocabSize;
+  if (vocabFileName.compare("") == 0)
+  {
+    vocabSize = 0;
+    // cout << "No vocab file" << endl;
+  }
+  else
+  {
+    vocabSize = readInputVocabulary(vocabFileName);
+    // cout << "Vocab size: " << vocabSize << endl;
+  }
   // First we need to get the names of all the categories
   categoryCount = 0;
-  string* categoryNames;
-  categoryNames = new string[MAX_NUM_CATEGORIES];
+  string* categoryNames = new string[MAX_NUM_CATEGORIES];
   readInputCategories(categoryFileName, categoryNames);
-  // Then we can get the vocabulary and create the CategoryProbabilities objects
-  categoryProbabilities = new CategoryProbabilities*[categoryCount];
-  int vocabSize = readInputVocabulary(vocabFileName);
   // Now create the CategoryProbabilities objects
+  categoryProbabilities = new CategoryProbabilities*[categoryCount];
   for (int i = 0; i < categoryCount; i++)
     categoryProbabilities[i] = new CategoryProbabilities(categoryNames[i], vocabSize);
 }
