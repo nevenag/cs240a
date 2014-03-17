@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
   {
     case SEQUENTIAL_EXECUTION:
     {
-      nbClassifier.printAllCategoryNames();
+      // nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = example_get_time();
       nbClassifier.learnFromTrainingSet(datasetName);
@@ -119,9 +119,10 @@ int main(int argc, char* argv[])
     {
     	// number of processors
     	int p = atoi(argv[3]);
+      cout << "Using " << p << " processors" << endl;
       // Tell cilk how many processors we want
       __cilkrts_set_param((void *)"nworkers", argv[3]);
-      nbClassifier.printAllCategoryNames();
+      // nbClassifier.printAllCategoryNames();
       // How long does the training phase take?
       start = example_get_time();
       nbClassifier.learnFromTrainingSetParallel(datasetName, p);

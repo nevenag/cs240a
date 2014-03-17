@@ -13,6 +13,7 @@
 // #define DEBUG_1
 // #define DEBUG_2
 // #define DEBUG_3
+// #define DEBUG_4
 
 using namespace std;
 
@@ -201,6 +202,14 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
         categoryChunks[i].offset = categoryChunks[i-1].offset + categoryChunks[i-1].size;
       }
     }
+#ifdef DEBUG_4
+    for (int i = 0; i < numProcs; i++)
+    {
+      cout << "Processor '" << i;
+      cout << "' has a chunk offset of '" << categoryChunks[i].offset;
+      cout << "' and chunk size of '" << categoryChunks[i].size << endl;
+    }
+#endif
     // Each processor keeps its own global doc count
     int *globalDocCounts = new int[numProcs]();
     // Loop through all the categories this processor is responsible for
@@ -343,8 +352,16 @@ void NaiveBayesClassifier::classifyTestSet(string datasetName)
 
 unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
 {
-	string fileNames[16] = {"x00", "x01", "x02", "x03", "x04", "x05", "x06", "x07",
-													"x08", "x09", "x10", "x11", "x12", "x13", "x14", "x15"};
+	string fileNames[16] = {
+    "parallel_test_files/00", "parallel_test_files/01",
+    "parallel_test_files/02", "parallel_test_files/03",
+    "parallel_test_files/04", "parallel_test_files/05",
+    "parallel_test_files/06", "parallel_test_files/07",
+    "parallel_test_files/08", "parallel_test_files/09",
+    "parallel_test_files/10", "parallel_test_files/11",
+    "parallel_test_files/12", "parallel_test_files/13",
+    "parallel_test_files/14", "parallel_test_files/15"
+  };
   if (p > 16)
   {
     cout << "Too many processors: " << p << endl;
