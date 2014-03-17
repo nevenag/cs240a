@@ -14,11 +14,30 @@ fi
 #echo $LINES/$DBS
 TOTALLINES=$(echo $LINES | awk 'BEGIN {FS=" "}{print $1}')
 LINEC=$(echo $(($TOTALLINES/$DBS)))
-echo $LINEC
+# echo $TOTALLINES
+# echo $LINEC
+mkdir -p "parallel_test_files"
 if [ $1 = 1 ]; then
-  split ./20news/twenty_news_groups_test.tsv -d -l $LINEC
+  split ./20news/twenty_news_groups_test.tsv -d -l $LINEC "parallel_test_files/"
 else
-  split ./reuters/test/mega_document -d -l $LINEC
+  split ./reuters/test/mega_document -d -l $LINEC "parallel_test_files/"
+fi
+COVEREDLINES=$(echo "$LINEC * $DBS" | bc)
+if [ $COVEREDLINES != $TOTALLINES ]; then
+  # echo "Unequal"
+  THETWO=$(ls -Sr parallel_test_files/ | head -2)
+  # echo $THETWO
+  oldIFS="$IFS"
+  IFS='
+  '
+  IFS=${IFS:0:1}
+  lines=( $THETWO )
+  IFS="$oldIFS"
+  # echo "${lines[0]}"
+  # echo "${lines[1]}"
+  cat "parallel_test_files/${lines[0]}" >> "parallel_test_files/${lines[1]}"
+  rm "parallel_test_files/${lines[0]}"
+  # echo $(echo "$TOTALLINES - $COVEREDLINES" | bc)
 fi
 ./naivebayes $1 $2 $DBS
-rm x*
+rm -r "parallel_test_files"
