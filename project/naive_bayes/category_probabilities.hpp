@@ -19,7 +19,6 @@ class CategoryProbabilities
     // Setters
     void setProbabilitiesWithCounts(std::unordered_map<std::string,int>,double,int);
     void setPriorProbabilityWithTotalDocCount(int);
-    void updateCountForWord(std::string);
   private:
     // Private Members
     std::string categoryName;
@@ -27,7 +26,7 @@ class CategoryProbabilities
     double categoryPriorProbability;
     // Count of all documents in this category
     int docCount;
-    //
+    // Might hold the size of parsed vocab, or size of vocab just for this category
     int vocabSize;
     // all P(w_i | C_j) terms stored in a hash map where
     // the key is w_i and the value is P(w_i | C_j)

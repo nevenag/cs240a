@@ -27,6 +27,7 @@
 #define N_GRAM_FILE_NAME	"n_gram_classified";
 
 /* #define DEBUG_1 */
+/* #define DEBUG_2 */
 
 typedef std::vector<std::string>      categories;
 
@@ -34,8 +35,10 @@ using namespace std;
 
 Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 {
+#ifdef DEBUG_2
 	cout << "Validator::Validator " << endl;
 	cout << dataset << " 	" << classifier << endl;
+#endif
 	this->dataset = dataset;
 	this->classifier = classifier;
 	this->categoryNames = categoryNames;
@@ -60,7 +63,9 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 	}
 	
 	test_set_classified_name = classified_name + "test_set_classified";
+#ifdef DEBUG_2
 	cout << "test_set_classified_name: " << test_set_classified_name << endl;
+#endif
 	
 	// what is the classifier we are validating?
 	switch(classifier){
@@ -179,7 +184,9 @@ void Validator::validate(unordered_map<string, string> &classified)
 
 void Validator::f_measure(unordered_map<string, string> &classified)
 {	
+#ifdef DEBUG_1
 	cout << "Validator::f_measure()" << endl;
+#endif
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
@@ -324,7 +331,7 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 	
 	accurancy = all_ii / all_sum;
 	
-	cout << "accurancy: " << accurancy << endl;
+	cout << "Accuracy: " << accurancy << endl;
 	
 	// deallocate the matrix
 	for (int i = 0; i < n; i++)
@@ -336,7 +343,9 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 
 void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 {	
+#ifdef DEBUG_1
 	cout << "Validator::f_measure_parallel()" << endl;
+#endif
 	int correct = 0;
 	int incorrect = 0;
 	// results in files with names:
@@ -367,7 +376,9 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 	// TODO CILK_SPAWN for those two:
 	// results we got are now passed as argument
 	// read the true 
+#ifdef DEBUG_1
 	cout << "test_set_classified_name" << test_set_classified_name << endl;
+#endif
 	readCategorizedData(test_set_classified_name, test_set_classified);
 	// docId, <true_cat, classified_cat>
 	// TODO test for all kinds of exceptions!!!!
@@ -405,8 +416,9 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 		confussionM[i][j] +=1;
 	}
 	//cout << "confussion.end" << endl;
-	
+#ifdef DEBUG_1
   printMatrix(confussionM, n);
+#endif
 	
 	// compute recall
 	double* temp = new double[n];
@@ -465,7 +477,7 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 	
 	accurancy = all_ii / all_sum;
 	
-	cout << "accurancy: " << accurancy << endl;
+	cout << "Accuracy: " << accurancy << endl;
 	
 	// deallocate the matrix
 	for (int i = 0; i < n; i++)
@@ -506,7 +518,7 @@ void Validator::readCategorizedData(string fileName, unordered_map<string, strin
 void Validator::printMatrix(int** matrix, int n)
 {
 	//print the confussion_matrix
-	cout << "confussion matrix: "<< endl;
+	cout << "Confusion Matrix: "<< endl;
 	for (int i = 0; i < n; i++){
 		for (int j = 0; j < n; j++)
 		{

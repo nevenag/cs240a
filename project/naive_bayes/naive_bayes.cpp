@@ -40,12 +40,10 @@ NaiveBayesClassifier::NaiveBayesClassifier (string categoryFileName, string voca
   if (vocabFileName.compare("") == 0)
   {
     vocabSize = 0;
-    // cout << "No vocab file" << endl;
   }
   else
   {
     vocabSize = readInputVocabulary(vocabFileName);
-    // cout << "Vocab size: " << vocabSize << endl;
   }
   // First we need to get the names of all the categories
   categoryCount = 0;
@@ -106,6 +104,7 @@ int NaiveBayesClassifier::readInputVocabulary(string fileName)
     }
     // All done
     inputFile.close();
+    // All we care about is the size
     return vocabVector.size();
 }
 
@@ -113,10 +112,9 @@ int NaiveBayesClassifier::readInputVocabulary(string fileName)
 
 int NaiveBayesClassifier::learnForCategory(string datasetName, int categoryIndex)
 {
-	// get category name
-	string categoryFileName = categoryProbabilities[categoryIndex]->getCategoryName();
-  categoryFileName = datasetName +"train/" + categoryFileName;
-	// read category file
+	// get category training file name
+	string categoryFileName = datasetName + "train/" + categoryProbabilities[categoryIndex]->getCategoryName();
+	// open category training file
 	ifstream inputFile (categoryFileName);
 	// create category map for words
 	unordered_map <string, int> wordCounts;
@@ -126,7 +124,7 @@ int NaiveBayesClassifier::learnForCategory(string datasetName, int categoryIndex
 	// Check for success
 	if (!inputFile)
 	{
-    // Cant do anything if we dont have the mega document...
+    // Cant do anything if we dont have the training document...
     cout << "learnFromTrainingSet::Unable to open training document file: " << categoryFileName << endl;
     exit(-1);
 	}
@@ -139,7 +137,7 @@ int NaiveBayesClassifier::learnForCategory(string datasetName, int categoryIndex
     getline(inputFile, line);
     // read word by word
     istringstream iss(line);
-    // for each word update vector vocabular per category
+    // for each word update vector vocabulary per category
     while (getline(iss, word, ' '))
     {
   		// if we have the word, increment the count
@@ -153,11 +151,11 @@ int NaiveBayesClassifier::learnForCategory(string datasetName, int categoryIndex
   		}
   		totalWordCount++;
     }
+    // One doc per line
     docCount++;
 	}
-	// add category 
+	// Set all the word likelihood probabilities
 	categoryProbabilities[categoryIndex]->setProbabilitiesWithCounts(wordCounts, totalWordCount, docCount);
-  
 	// and close the file
 	inputFile.close();
   return docCount;
@@ -177,8 +175,6 @@ void NaiveBayesClassifier::learnFromTrainingSet(string datasetName)
     for (int i = 0; i < categoryCount; i++)
     {
       categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
-      //cout << "Number of docs in category '" << categoryProbabilities[i]->getCategoryName() << "': " << categoryProbabilities[i]->getDocCount() << endl;
-      //cout << "Probability of category '" << categoryProbabilities[i]->getCategoryName() << "' is: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
     }
     return;
 }
@@ -235,21 +231,9 @@ void NaiveBayesClassifier::learnFromTrainingSetParallel(string datasetName, int 
       for (int i = categoryChunks[j].offset; i < categoryChunks[j].offset+categoryChunks[j].size; i++)
       {
         categoryProbabilities[i]->setPriorProbabilityWithTotalDocCount(globalDocCount);
-        // cout << "Processor '" << j << "' is responsible for category '" << categoryProbabilities[i]->getCategoryName() << "', which has prior probability: " << categoryProbabilities[i]->getCategoryPriorProbability() << endl;
       }
     }
     delete [] categoryChunks;
-}
-
-// Document Classification Internal Helpers
-
-string constructClassificationString(string docID, string categoryName)
-{
-  int bufferSize = docID.size()+categoryName.size()+4;
-  char *buffer = new char[bufferSize];
-  sprintf(buffer, "%s %s\n", docID.c_str(), categoryName.c_str());
-  string classificationString(buffer);
-  return classificationString;
 }
 
 // Document Classification
@@ -330,26 +314,6 @@ void NaiveBayesClassifier::classifyDocumentsInFile(string documentFileName, unor
 #endif
 }
 
-/*
-  This method assumes that all test documents are placed into a single file. The results of
-   the classification are written to a file called 'naive_bayes_classified' in the form of
-   (documentID assignedCategory) pairs, one per line.
-  @param testSetFileName: The name of the single text file with all of the test documents.
-*/
-void NaiveBayesClassifier::classifyTestSet(string datasetName)
-{
-	// Open document file
-	ifstream inputFile (datasetName+"test/mega_document");
-	// Check for success
-	if (!inputFile)
-	{
-	    // Cant do anything if we dont have documents...
-	    cout << "classifyTestSet::Unable to open test set document file: " << datasetName+"test/mega_document" << endl;
-	    exit(-1);
-	}
-  
-}
-
 unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
 {
 	string fileNames[16] = {
@@ -372,7 +336,7 @@ unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(stri
     unordered_map<string, string> map;
     documentClassifications.push_back(map);
   }
-  // cilk_for
+  // cilk_for over all test files (one per processor)
 	cilk_for (int i = 0; i < p; i++)
   {
 		classifyDocumentsInFile(fileNames[i], documentClassifications[i]);

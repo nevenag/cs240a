@@ -12,13 +12,11 @@ CategoryProbabilities::CategoryProbabilities(string cName, int vocabSize)
 {
   categoryName = cName;
   this->vocabSize = vocabSize;
-  // cout << "Using vocab size of: " << vocabSize << endl;
 }
 
 CategoryProbabilities::CategoryProbabilities(string cName)
 {
-    categoryName = cName;
-    vocabSize = 0;
+  CategoryProbabilities(cName, 0);
 }
 
 // Getters
@@ -61,16 +59,4 @@ void CategoryProbabilities::setProbabilitiesWithCounts(unordered_map <string, in
     // Unknown words have a fixed probability according to add-alpha smoothing
     unknownWordProbability = log((ALPHA / (totalWordCount + ALPHA*vocabSize)));
     // unknownWordProbability = SCALING_FACTOR*ALPHA / (totalWordCount + ALPHA*vocabSize);
-}
-
-void CategoryProbabilities::updateCountForWord(string word)
-{
-    if (wordLikelihoodProbabilities.count(word) == 1)
-    {
-        wordLikelihoodProbabilities[word] += 1.0;
-    }
-    else
-    {
-        wordLikelihoodProbabilities[word] = 1.0;
-    }
 }
