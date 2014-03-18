@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
       break;
     case ENRON:
       datasetName = ENRON_NAME;
-      vocabFileName = "";
+      vocabFileName = "enron/vocab.txt";
       break;
     default:
       cout << "main:: not able to select dataset" << endl;
