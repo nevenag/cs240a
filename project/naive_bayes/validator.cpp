@@ -26,6 +26,8 @@
 #define NAIVE_BAYES_FILE_NAME	"naive_bayes_classified";
 #define N_GRAM_FILE_NAME	"n_gram_classified";
 
+/* #define DEBUG_1 */
+
 typedef std::vector<std::string>      categories;
 
 using namespace std;
@@ -167,12 +169,11 @@ void Validator::validate(unordered_map<string, string> &classified)
 			incorrect++;
 		}
 		
-		//cout << "sec " << it->second << endl;
 	}
-	cout << "correctly classified: " << correct << endl;
-	cout << "incorrectly classified: " << incorrect << endl; 
-	*/
+	//cout << "correctly classified: " << correct << endl;
+	//cout << "incorrectly classified: " << incorrect << endl; 
 	
+	*/
 }
 
 
@@ -215,7 +216,6 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 			// docId is a string
 		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
 		confussion[it->first] = std::make_pair(test_set_classified[it->first], it->second);
-		string s = it->first;
 	}
 
 	// initialize confussion matrix to zeros
@@ -240,9 +240,16 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 		int i = indeces[cats1.first];	
 		int j = indeces[cats1.second];
 		confussionM[i][j] +=1;
+#ifdef DEBUG_1	
+		cout << "true value category: " << cats1.first << endl;
+		cout << "naive value category: " << cats1.second << endl;
+		cout << confussionM[i][j] << endl;
+#endif		
 	}
 	
-  // printMatrix(confussionM, n);
+#ifdef DEBUG_1	
+  printMatrix(confussionM, n);
+#endif
 	
 	// compute recall
 	double* temp = new double[n];
@@ -272,24 +279,32 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 	{
 		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
 	}
+	
+#ifdef DEBUG_1	
 	// print recall per category:
-	//cout << "recall per category:" << endl;
-	//for (int i = 0; i < n; i++)
-	//{
-	//	cout << recall[i] << endl;
-	//}
+	cout << "recall per category:" << endl;
+	for (int i = 0; i < n; i++)
+	{
+		cout << recall[i] << endl;
+	}
+	
+#endif
+
 	
 	// compute precision
 	for (int i = 0; i < n; i++)
 	{
 		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
 	}
-	// print precission per category:
-	//cout << "precission per category:" << endl;
-	//for (int i = 0; i < n; i++)
-	//{
-	//	cout << precission[i] << endl;
-	//}
+	
+#ifdef DEBUG_1
+	//print precission per category:
+	cout << "precission per category:" << endl;
+	for (int i = 0; i < n; i++)
+	{
+		cout << precission[i] << endl;
+	}
+#endif
 	
 	double all_sum = 0;
 	
