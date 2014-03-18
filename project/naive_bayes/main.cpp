@@ -99,11 +99,19 @@ int main(int argc, char* argv[])
       cout << "Elapsed time for sequential classification of entire test set: " << runTime/1000.f << " seconds" << endl;
       // Print out all classifications
       // cout << "Document Classifications:" << endl;
-      // typedef unordered_map<string, string>::iterator it_type;
-      // for (it_type it = docClassifications.begin(); it != docClassifications.end(); it++)
-      // {
-      //   cout << "\t" << it->first << " " << it->second << endl;
-      // }
+      typedef unordered_map<string, string>::iterator it_type;
+      ofstream outputFile(datasetName+"naive_bayes_classified");
+      for (it_type it = docClassifications.begin(); it != docClassifications.end(); it++)
+      {
+        string docID = it->first;
+        string categoryName = it->second;
+        int bufferSize = docID.size()+categoryName.size()+4;
+        char *buffer = new char[bufferSize];
+        sprintf(buffer, "%s %s\n", docID.c_str(), categoryName.c_str());
+        string classificationString(buffer);
+        outputFile.write(classificationString.c_str(), classificationString.size());
+      }
+      outputFile.close();
       // Validator stuff
 			categoryNames_size = nbClassifier.getCategoryCount();
 			categoryNames = new string[categoryNames_size];
