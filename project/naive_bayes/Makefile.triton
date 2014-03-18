@@ -1,5 +1,5 @@
 CC = icc
-CFLAGS = -std=c++0x -ggdb -O0 -I /opt/cilkutil/include/
+CFLAGS = -std=c++0x -I /opt/cilkutil/include/ #-ggdb -O0
 OBJECTS = main.o naive_bayes.o category_probabilities.o validator.o
 EXECUTABLE = naivebayes
 
