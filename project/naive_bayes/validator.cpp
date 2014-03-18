@@ -81,119 +81,14 @@ Validator::Validator(int dataset, int classifier, string* categoryNames, int n)
 	}
 }
 
-
-/* method goes to the dataset directory and compares
- * the values from the given classifier and real values */
-void Validator::validate(unordered_map<string, string> &classified)
-{/*
-  double F_measure = 0;
-  double precission = 0;
-  double recall = 0;
-  int correct = 0;
-  int incorrect = 0;
-  // true values from the test set
-  unordered_map<string, categories > test_set_classified;
-  // values from our classifier
-  unordered_map<string, categories > classified;
-  std::unordered_map<string,categories>::iterator it;
-
-  // read results we got
-  ifstream inputFile (classified_name);
-  if (!inputFile)
-  {
-    cout << "validate::Unable to open the file: " << classified_name << endl;
-    exit(-1);
-  }
-  // While there's still stuff left to read...
-  while (inputFile)
-  {
-    // Read one line at a time
-    string line;
-    string docId;
-    string catName;
-    getline(inputFile, line);
-    // read the document id
-    istringstream iss(line);
-    getline(iss, docId, ' ');
-    categories cats;
-    string cat;
-    // read all the topics that are associated to this docId
-    while (getline(iss, cat, ' '))
-    {
-      // and add them to the list of topics for that docId
-      classified[docId].push_back(cat);
-    }
-  }
- inputFile.close();
-  // read the true values
-  ifstream inputFilea (test_set_classified_name);
-  if (!inputFilea)
-  {
-    cout << "validate::Unable to open the file: " << test_set_classified_name << endl;
-    exit(-1);
-  }
-  while (inputFilea)
-  {
-    // Read one line at a time
-		string line;
-    string docId;
-    string catName;
-    getline(inputFilea, line);
-    // read the document id
-    istringstream iss(line);
-    getline(iss, docId, ' ');
-    categories cats;
-    string cat;
-    // read all the topics that are associated to this docId
-    while (getline(iss, cat, ' '))
-    {
-      // and add them to the list of topics for that docId
-      test_set_classified[docId].push_back(cat);
-    }
-  }
-   inputFilea.close();
-  // compares
-	// for now check accurancy num-of-correct/total-num
-   // itterate through all the docId's in the file
-	for (it=classified.begin(); it!=classified.end(); ++it){
-		// for each document, get ID
-		// check if there is one in the test set (it should be)
-		// TODO check exceptions
-		string doc_Id = it->first;
-		categories cats = it->second;
-		string found_cat = cats.front();
-		
-		// now get the coresponding true value from the test set:
-		categories real_cats = test_set_classified[doc_Id];
-		// do they have our category?
-		if(std::find(real_cats.begin(), real_cats.end(), found_cat)!=real_cats.end())
-		{
-			correct++;
-		}else
-		{
-			incorrect++;
-		}
-		
-	}
-	//cout << "correctly classified: " << correct << endl;
-	//cout << "incorrectly classified: " << incorrect << endl; 
-	
-	*/
-}
-
-
 void Validator::f_measure(unordered_map<string, string> &classified)
 {	
 #ifdef DEBUG_1
 	cout << "Validator::f_measure()" << endl;
 #endif
-	int correct = 0;
-	int incorrect = 0;
-	// results in files with names:
 	// true values from the test set
 	unordered_map<string, string> test_set_classified;
-	// values from our classifier
-	//unordered_map<string, string> classified;
+	// values from our classifier are in classified map argument
 	std::unordered_map<string,string>::iterator it;
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
 	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
@@ -211,14 +106,9 @@ void Validator::f_measure(unordered_map<string, string> &classified)
 	{
 		confussionM [i] = new int[n];
 	}
-	// TODO CILK_SPAWN for those two:
 	// read results we got
-	//readCategorizedData(classified_name, classified);
-	// read the true values
 	readCategorizedData(test_set_classified_name, test_set_classified);
 	// docId, <true_cat, classified_cat>
-	// TODO test for all kinds of exceptions!!!!
-	// TODO CILK_FOR
 	for (it=classified.begin(); it!=classified.end(); ++it){
 			// docId is a string
 		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
@@ -346,20 +236,13 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 #ifdef DEBUG_1
 	cout << "Validator::f_measure_parallel()" << endl;
 #endif
-	int correct = 0;
-	int incorrect = 0;
-	// results in files with names:
 	// true values from the test set
 	unordered_map<string, string> test_set_classified;
-	// values from our classifier
+	// values from our classifier are in classified
 	std::unordered_map<string,string>::iterator it;
+	// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
 	unordered_map<std::string, std::pair<std::string, std::string> > confussion;
 	std::unordered_map<string,std::pair<std::string, std::string> >::iterator itt;
-	//int dataset = this->dataset;
-	//int classifier = this->classifier;
-	//string test_set_classified_name = this->test_set_classified_name;
-	//int n = this->n;
-	//string* categoryNames = this->categoryNames;
 	std::map <std::string, int> indeces;
 	// confussion matrix
 	int** confussionM  = new int*[n];
@@ -373,7 +256,6 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 	{
 		confussionM [i] = new int[n];
 	}
-	// TODO CILK_SPAWN for those two:
 	// results we got are now passed as argument
 	// read the true 
 #ifdef DEBUG_1
@@ -381,14 +263,11 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 #endif
 	readCategorizedData(test_set_classified_name, test_set_classified);
 	// docId, <true_cat, classified_cat>
-	// TODO test for all kinds of exceptions!!!!
-	//cout << "read cat.data" << endl;
 	for (it=classified.begin(); it!=classified.end(); ++it){
 		// docId is a string
 		// it->first is docID followed by pair <truth-cat-str, classified-cat-str>
 		confussion[it->first] = std::make_pair(test_set_classified[it->first], it->second);
 	}
-	//cout << "read classified data" << endl;
 	// initialize confussion matrix to zeros
 	cilk_for (int i = 0; i < n; i++){
 		for (int j = 0; j < n; j++)
@@ -396,13 +275,10 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 			confussionM[i][j] = 0;
 		}
 	}
-	//cout << "confussionM" << endl;
 	/*
 	 *	 Build a map that will give us an index - int for each category name
 	 *	 this way we can store the whole matrix as a simple in[][] matrix.
 	 */
-	// TODO cilk
-	//cout << "index and n: " << n <<  endl;
 	cilk_for (int index = 0; index < n; index++)
 	{
 		indeces[categoryNames[index]] = index;
@@ -415,7 +291,7 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 		int j = indeces[cats1.second];
 		confussionM[i][j] +=1;
 	}
-	//cout << "confussion.end" << endl;
+	
 #ifdef DEBUG_1
   printMatrix(confussionM, n);
 #endif
@@ -426,7 +302,6 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 	double* sum_cij_for_all_j = new double[n];
 	
 	// second index iterates
-	// TODO cilk
 	cilk_for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
@@ -434,10 +309,9 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 			sum_cij_for_all_j[i] += confussionM[i][j];
 		}
 	}
-	//cout << "before first index" << endl;
+	
 	double* sum_cji_for_all_j = new double[n];
 	// first index iterates	
-	// TODO cilk
 	cilk_for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
@@ -445,19 +319,17 @@ void Validator::f_measure_parallel(unordered_map<string, string> &classified)
 			sum_cji_for_all_j[i] += confussionM[j][i];
 		}
 	}
-	// TODO cilk
+	
 	cilk_for (int i = 0; i < n; i++)
 	{
 		recall[i] = confussionM[i][i] / sum_cij_for_all_j[i];
 	}
 	
 	// compute precision
-	// TODO cilk
 	cilk_for (int i = 0; i < n; i++)
 	{
 		precission[i] = confussionM[i][i] / sum_cji_for_all_j[i];
 	}
-	//cout << "before all sum" << endl;
 	
 	double all_sum = 0;
 	

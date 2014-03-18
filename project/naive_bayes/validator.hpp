@@ -5,6 +5,8 @@ class Validator
 {
   public:
 		Validator(int, int, std::string*, int);
+		/* method goes to the dataset directory and compares
+		 * the values from the given classifier and real values */
 		void validate(std::unordered_map<std::string, std::string> &classified);
 		void f_measure(std::unordered_map<std::string, std::string> &classified);
 		void f_measure_parallel(std::unordered_map<std::string, std::string> &);
