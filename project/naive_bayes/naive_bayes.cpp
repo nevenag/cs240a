@@ -316,7 +316,7 @@ void NaiveBayesClassifier::classifyDocumentsInFile(string documentFileName, unor
 
 unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(string datasetName, int p)
 {
-	string fileNames[16] = {
+	string fileNames[32] = {
     "parallel_test_files/00", "parallel_test_files/01",
     "parallel_test_files/02", "parallel_test_files/03",
     "parallel_test_files/04", "parallel_test_files/05",
