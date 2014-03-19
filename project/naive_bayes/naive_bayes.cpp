@@ -324,9 +324,17 @@ unordered_map<string, string> NaiveBayesClassifier::classifyTestSetParallel(stri
     "parallel_test_files/08", "parallel_test_files/09",
     "parallel_test_files/10", "parallel_test_files/11",
     "parallel_test_files/12", "parallel_test_files/13",
-    "parallel_test_files/14", "parallel_test_files/15"
+    "parallel_test_files/14", "parallel_test_files/15",
+    "parallel_test_files/16", "parallel_test_files/17",
+    "parallel_test_files/18", "parallel_test_files/19",
+    "parallel_test_files/20", "parallel_test_files/21",
+    "parallel_test_files/22", "parallel_test_files/23",
+    "parallel_test_files/24", "parallel_test_files/25",
+    "parallel_test_files/26", "parallel_test_files/27",
+    "parallel_test_files/28", "parallel_test_files/29",
+    "parallel_test_files/30", "parallel_test_files/31"
   };
-  if (p > 16)
+  if (p > 32)
   {
     cout << "Too many processors: " << p << endl;
   }

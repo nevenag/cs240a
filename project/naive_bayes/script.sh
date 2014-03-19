@@ -41,6 +41,11 @@ if [ $COVEREDLINES != $TOTALLINES ]; then
   # echo "${lines[1]}"
   cat "parallel_test_files/${lines[0]}" >> "parallel_test_files/${lines[1]}"
   rm "parallel_test_files/${lines[0]}"
+  # echo "Removed parallel_test_files/${lines[0]}"
+  if [ ${lines[0]} != $DBS ]; then
+    mv "parallel_test_files/$DBS" "parallel_test_files/${lines[0]}"
+    # echo "Moved parallel_test_files/$DBS to parallel_test_files/${lines[0]}"
+  fi
   # echo $(echo "$TOTALLINES - $COVEREDLINES" | bc)
 fi
 ./naivebayes $1 $2 $DBS
